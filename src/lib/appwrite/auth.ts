@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createAdminClient, createSessionClient } from "./server";
 import { Account, ID } from "node-appwrite";
 
-export const SESSION_COOKIE = "my-custom-session";
+export const SESSION_COOKIE = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT || "groveinc"}`;
 
 export async function createSessionClientDirectly() {
     const cookieStore = await cookies();

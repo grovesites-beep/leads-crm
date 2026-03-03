@@ -3,17 +3,21 @@
 import { ID, Query, Client, Account } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "./server";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { SESSION_COOKIE } from "./auth";
 
 // --- AUTH & SESSION ---
 
 export async function getLoggedInUser() {
+    console.log("--- CHECANDO SESSÃO ---");
     try {
         const { getAccount } = await createSessionClient();
+        console.log("Cliente de sessão criado...");
         const user = await getAccount().get();
+        console.log("Usuário autenticado encontrado:", user.email);
+
         if (!user) return null;
 
-        // Tentar buscar as labels via Admin API se possível, mas não travar se falhar
         try {
             const { getUsers } = await createAdminClient();
             const userData = await getUsers().get(user.$id);
@@ -22,9 +26,11 @@ export async function getLoggedInUser() {
                 labels: userData.labels || []
             };
         } catch (e) {
+            console.log("Não foi possível buscar labels administrativas, usando perfil básico.");
             return user;
         }
-    } catch (error) {
+    } catch (error: any) {
+        console.log("Falha na autenticação ou sessão inexistente:", error.message);
         return null;
     }
 }
@@ -45,8 +51,10 @@ export async function signIn(email: string, password: string) {
         const account = new Account(client);
 
         const session = await account.createEmailPasswordSession(email, password);
+        console.log("SUCESSO: Sessão criada no Appwrite!");
 
-        (await cookies()).set(SESSION_COOKIE, session.secret, {
+        const cookieStore = await cookies();
+        cookieStore.set(SESSION_COOKIE, session.secret, {
             path: "/",
             httpOnly: true,
             sameSite: "lax",
@@ -54,9 +62,11 @@ export async function signIn(email: string, password: string) {
             expires: new Date(session.expire)
         });
 
+        console.log(`Cookie ${SESSION_COOKIE} definido.`);
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
-        console.error("Erro no signIn:", error.message);
+        console.error("ERRO ao criar sessão no Appwrite:", error.message);
         return { success: false, error: error.message };
     }
 }

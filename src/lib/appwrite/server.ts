@@ -15,8 +15,10 @@ export async function createSessionClient() {
         .setProject(project);
 
     const session = (await cookies()).get(SESSION_COOKIE);
+    console.log(`Buscando cookie ${SESSION_COOKIE}... ${session ? "ENCONTRADO" : "AUSENTE"}`);
+
     if (!session || !session.value) {
-        throw new Error("No session");
+        throw new Error(`Sessão não encontrada no cookie ${SESSION_COOKIE}`);
     }
 
     client.setSession(session.value);
