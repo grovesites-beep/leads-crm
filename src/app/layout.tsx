@@ -35,9 +35,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { getDatabases } = await createAdminClient();
   let primaryColor = "#000000";
   try {
+    const { getDatabases } = await createAdminClient();
     const settings = await getDatabases().getDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
       process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
@@ -46,7 +46,9 @@ export default async function RootLayout({
     if (settings.primaryColor) {
       primaryColor = settings.primaryColor;
     }
-  } catch (e) { }
+  } catch (e) {
+    console.warn("Aviso: Falha ao carregar branding no layout (possivelmente durante o build). Usando padrão.");
+  }
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>

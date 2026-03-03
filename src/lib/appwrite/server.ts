@@ -3,9 +3,16 @@ import { cookies } from 'next/headers';
 import { SESSION_COOKIE } from './auth';
 
 export async function createSessionClient() {
+    const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+    const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+
+    if (!endpoint || !project) {
+        throw new Error("Appwrite environment variables are missing.");
+    }
+
     const client = new Client()
-        .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-        .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
+        .setEndpoint(endpoint)
+        .setProject(project);
 
     const session = (await cookies()).get(SESSION_COOKIE);
     if (!session || !session.value) {
@@ -22,10 +29,18 @@ export async function createSessionClient() {
 }
 
 export const createAdminClient = async () => {
+    const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+    const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+    const key = process.env.APPWRITE_API_KEY;
+
+    if (!endpoint || !project || !key) {
+        throw new Error("Appwrite environment variables are missing.");
+    }
+
     const client = new Client()
-        .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-        .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!)
-        .setKey(process.env.APPWRITE_API_KEY!);
+        .setEndpoint(endpoint)
+        .setProject(project)
+        .setKey(key);
 
     return {
         getAccount: () => new Account(client),
