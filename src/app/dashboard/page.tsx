@@ -31,8 +31,9 @@ export default async function DashboardPage() {
         const databases = getDatabases();
 
         const isAdmin = user.labels?.includes('admin') ||
-            user.email?.toLowerCase() === 'admin@grovehub.com.br' ||
-            user.email?.toLowerCase() === 'nei@grovehub.com.br';
+            user.email?.toLowerCase().trim() === 'admin@grovehub.com.br' ||
+            user.email?.toLowerCase().trim() === 'nei@grovehub.com.br';
+
 
 
         const baseQueries: string[] = [];

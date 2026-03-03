@@ -12,16 +12,7 @@ export async function getLoggedInUser() {
     try {
         const { getAccount } = await createSessionClient();
         const user = await getAccount().get();
-        if (!user) return null;
-
-        // Buscar labels via Admin API (labels não vêm no getAccount().get())
-        const { getUsers } = await createAdminClient();
-        const userData = await getUsers().get(user.$id);
-
-        return {
-            ...user,
-            labels: userData.labels || []
-        };
+        return user;
     } catch (error) {
         return null;
     }
@@ -187,8 +178,8 @@ export async function getLeads() {
         const queries = [Query.orderDesc("$createdAt")];
 
         const isAdmin = user.labels?.includes('admin') ||
-            user.email?.toLowerCase() === 'admin@grovehub.com.br' ||
-            user.email?.toLowerCase() === 'nei@grovehub.com.br';
+            user.email?.toLowerCase().trim() === 'admin@grovehub.com.br' ||
+            user.email?.toLowerCase().trim() === 'nei@grovehub.com.br';
 
         // Se for cliente, filtrar apenas os leads dele
         if (!isAdmin) {
