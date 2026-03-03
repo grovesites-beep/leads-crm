@@ -1,8 +1,19 @@
 import { cookies } from 'next/headers';
+import { Client, Account } from 'node-appwrite';
 import { criarClienteComSessao, criarClienteServidor } from './servidor';
 
 // Nome do cookie da sessão do Appwrite
 export const NOME_COOKIE_SESSAO = 'sessao-appwrite';
+
+/**
+ * Cria um cliente Appwrite SEM API Key — necessário para operações de sessão de usuário
+ */
+function criarClientePublico() {
+    const cliente = new Client()
+        .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+        .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+    return { cliente, conta: new Account(cliente) };
+}
 
 /**
  * Obtém o usuário autenticado atual via cookie de sessão
@@ -41,9 +52,10 @@ export async function verificarSeEhAdmin(usuario: { labels?: string[]; email?: s
 
 /**
  * Cria a sessão do usuário após login e armazena o cookie
+ * IMPORTANTE: usa cliente público (sem API Key) — Appwrite exige isso para createEmailPasswordSession
  */
 export async function criarSessao(email: string, senha: string) {
-    const { conta } = criarClienteServidor();
+    const { conta } = criarClientePublico();
 
     const sessao = await conta.createEmailPasswordSession(email, senha);
 
