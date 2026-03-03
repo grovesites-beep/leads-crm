@@ -1,3 +1,5 @@
+"use server"
+
 import { Client, Account, Databases, Storage, Users } from 'node-appwrite';
 import { cookies } from 'next/headers';
 import { SESSION_COOKIE } from './auth';
@@ -7,21 +9,26 @@ export async function createSessionClient() {
     const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
     if (!endpoint || !project) {
-        throw new Error("Appwrite environment variables are missing.");
+        throw new Error("Variáveis de ambiente do Appwrite faltando.");
     }
 
     const client = new Client()
         .setEndpoint(endpoint)
         .setProject(project);
 
-    const session = (await cookies()).get(SESSION_COOKIE);
-    console.log(`Buscando cookie ${SESSION_COOKIE}... ${session ? "ENCONTRADO" : "AUSENTE"}`);
+    try {
+        const cookieStore = await cookies();
+        const session = cookieStore.get(SESSION_COOKIE);
 
-    if (!session || !session.value) {
-        throw new Error(`Sessão não encontrada no cookie ${SESSION_COOKIE}`);
+        if (session && session.value) {
+            client.setSession(session.value);
+        } else {
+            // Se não houver cookie, não throw erro aqui, apenas devolva o cliente sem sessão
+            // getLoggedInUser lidará com a falta de dados
+        }
+    } catch (e) {
+        // Silenciar erro de acesso a cookies em ambientes de build
     }
-
-    client.setSession(session.value);
 
     return {
         getAccount: () => new Account(client),
@@ -36,7 +43,7 @@ export const createAdminClient = async () => {
     const key = process.env.APPWRITE_API_KEY;
 
     if (!endpoint || !project || !key) {
-        throw new Error("Appwrite environment variables are missing.");
+        throw new Error("Chave de API do Appwrite faltando.");
     }
 
     const client = new Client()

@@ -9,15 +9,12 @@ import { SESSION_COOKIE } from "./auth";
 // --- AUTH & SESSION ---
 
 export async function getLoggedInUser() {
-    console.log("--- CHECANDO SESSÃO ---");
     try {
         const { getAccount } = await createSessionClient();
-        console.log("Cliente de sessão criado...");
         const user = await getAccount().get();
-        console.log("Usuário autenticado encontrado:", user.email);
-
         if (!user) return null;
 
+        // Tentar buscar as labels via Admin API se possivel, mas sem travar
         try {
             const { getUsers } = await createAdminClient();
             const userData = await getUsers().get(user.$id);
@@ -26,11 +23,9 @@ export async function getLoggedInUser() {
                 labels: userData.labels || []
             };
         } catch (e) {
-            console.log("Não foi possível buscar labels administrativas, usando perfil básico.");
             return user;
         }
     } catch (error: any) {
-        console.log("Falha na autenticação ou sessão inexistente:", error.message);
         return null;
     }
 }
@@ -41,7 +36,7 @@ export async function signIn(email: string, password: string) {
         const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
         if (!endpoint || !project) {
-            throw new Error("Configurações do Appwrite ausentes.");
+            throw new Error("Variáveis de ambiente do Appwrite não encontradas.");
         }
 
         const client = new Client()
@@ -51,7 +46,6 @@ export async function signIn(email: string, password: string) {
         const account = new Account(client);
 
         const session = await account.createEmailPasswordSession(email, password);
-        console.log("SUCESSO: Sessão criada no Appwrite!");
 
         const cookieStore = await cookies();
         cookieStore.set(SESSION_COOKIE, session.secret, {
@@ -62,18 +56,19 @@ export async function signIn(email: string, password: string) {
             expires: new Date(session.expire)
         });
 
-        console.log(`Cookie ${SESSION_COOKIE} definido.`);
-        revalidatePath('/', 'layout');
+        try {
+            revalidatePath('/', 'layout');
+        } catch (e) { }
+
         return { success: true };
     } catch (error: any) {
-        console.error("ERRO ao criar sessão no Appwrite:", error.message);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Erro desconhecido ao autenticar." };
     }
 }
 
 export async function signOut() {
-    const session = (await cookies()).get(SESSION_COOKIE);
-    if (session) {
+    const sessionCookie = (await cookies()).get(SESSION_COOKIE);
+    if (sessionCookie) {
         try {
             const { getAccount } = await createSessionClient();
             await getAccount().deleteSession('current');
@@ -82,7 +77,7 @@ export async function signOut() {
     (await cookies()).delete(SESSION_COOKIE);
 }
 
-// --- CLIENT MANAGEMENT (ADMIN ONLY) ---
+// --- CLIENT MANAGEMENT ---
 
 export async function createClient(data: { name: string, email: string, password: string }) {
     try {
@@ -156,8 +151,7 @@ export async function updateClient(clientId: string, data: { name: string }) {
     }
 }
 
-
-// --- SYSTEM SETTINGS ---
+// --- SETTINGS ---
 
 export async function getPublicSettings() {
     try {

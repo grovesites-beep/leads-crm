@@ -14,12 +14,7 @@ export default async function DashboardPage() {
         { title: "Conversão (Simulada)", value: "8.2%", change: "+1.2%", icon: MousePointerClick },
     ];
 
-    let user;
-    try {
-        user = await getLoggedInUser();
-    } catch (e) {
-        console.error("Erro ao obter usuário:", e);
-    }
+    const user = await getLoggedInUser();
 
     if (!user) {
         redirect("/login");
@@ -30,11 +25,10 @@ export default async function DashboardPage() {
         const { getDatabases } = await createSessionClient();
         const databases = getDatabases();
 
+        const emailLower = user.email?.toLowerCase().trim() || "";
         const isAdmin = user.labels?.includes('admin') ||
-            user.email?.toLowerCase().trim() === 'admin@grovehub.com.br' ||
-            user.email?.toLowerCase().trim() === 'nei@grovehub.com.br';
-
-
+            emailLower === 'admin@grovehub.com.br' ||
+            emailLower === 'nei@grovehub.com.br';
 
         const baseQueries: string[] = [];
         if (!isAdmin) {
@@ -64,17 +58,19 @@ export default async function DashboardPage() {
         // Se for Admin, buscar total de clientes
         let clientCount: number | null = null;
         if (isAdmin) {
-            const clients = await databases.listDocuments(
-                process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-                process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
-                [Query.limit(0)]
-            );
-            clientCount = clients.total;
+            try {
+                const clients = await databases.listDocuments(
+                    process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+                    process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
+                    [Query.limit(0)]
+                );
+                clientCount = clients.total;
+            } catch (e) { }
         }
 
         stats = [
-            { title: "Total de Leads", value: leadsCount.total.toString(), change: isAdmin ? "Global" : "Até agora", icon: Users },
-            { title: "Leads (Este Mês)", value: leadsMonth.total.toString(), change: "Mês atual", icon: TrendingUp },
+            { title: "Total de Leads", value: (leadsCount?.total || 0).toString(), change: isAdmin ? "Global" : "Até agora", icon: Users },
+            { title: "Leads (Este Mês)", value: (leadsMonth?.total || 0).toString(), change: "Mês atual", icon: TrendingUp },
             ...(isAdmin ? [
                 { title: "Parceiros Ativos", value: (clientCount || 0).toString(), change: "SaaS Ativo", icon: Building2 }
             ] : [
@@ -83,7 +79,7 @@ export default async function DashboardPage() {
             { title: "Conversão (Simulada)", value: "8.2%", change: "+1.2%", icon: MousePointerClick },
         ];
     } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
+        console.error("Falha ao carregar métricas específicas, usando dados zerados padrão.");
     }
 
     return (
