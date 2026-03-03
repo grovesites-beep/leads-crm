@@ -44,9 +44,10 @@ export default function ClientsPage() {
     useEffect(() => {
         async function checkAdmin() {
             const user = await getLoggedInUser();
+            const emailLower = user?.email?.toLowerCase()?.trim();
             const isAdmin = user?.labels?.includes('admin') ||
-                user?.email === 'admin@grovehub.com.br' ||
-                user?.email === 'nei@grovehub.com.br';
+                emailLower === 'admin@grovehub.com.br' ||
+                emailLower === 'nei@grovehub.com.br';
 
             if (!isAdmin) {
                 router.push("/dashboard");

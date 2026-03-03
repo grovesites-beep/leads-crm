@@ -53,15 +53,19 @@ export function AppSidebar() {
 
     useEffect(() => {
         async function loadData() {
+            setLoading(true);
             try {
-                const [userData, settingsData] = await Promise.all([
-                    getLoggedInUser(),
-                    getSettings()
-                ]);
+                // Tentar carregar usuário
+                const userData = await getLoggedInUser();
                 setUser(userData);
-                if (settingsData.success) setSettings(settingsData.settings);
+
+                // Tentar carregar configurações de branding (independente do user)
+                const settingsData = await getSettings();
+                if (settingsData.success) {
+                    setSettings(settingsData.settings);
+                }
             } catch (e) {
-                console.error("Erro ao carregar sidebar:", e);
+                console.error("Erro na Sidebar:", e);
             } finally {
                 setLoading(false);
             }
@@ -74,9 +78,12 @@ export function AppSidebar() {
         window.location.href = "/login";
     };
 
-    const isAdmin = user?.labels?.includes('admin') ||
-        user?.email?.toLowerCase() === 'admin@grovehub.com.br' ||
-        user?.email?.toLowerCase() === 'nei@grovehub.com.br';
+    const email = user?.email?.toLowerCase()?.trim() || "";
+    const labels = user?.labels || [];
+
+    const isAdmin = labels.includes('admin') ||
+        email === 'admin@grovehub.com.br' ||
+        email === 'nei@grovehub.com.br';
 
     const menuGroups = [
         {
@@ -98,7 +105,7 @@ export function AppSidebar() {
                     title: "Leads Captados",
                     url: "/dashboard/leads",
                     icon: Users,
-                    show: true // Mostrar para todos, as actions filtram o dado
+                    show: true
                 },
             ].filter(i => i.show),
         },
@@ -128,7 +135,7 @@ export function AppSidebar() {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <span className="text-[10px] uppercase font-bold tracking-widest">Carregando...</span>
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-center px-4">Sincronizando...</span>
                     </div>
                 ) : (
                     menuGroups.map((group) => (
@@ -161,19 +168,25 @@ export function AppSidebar() {
             <SidebarSeparator />
             <SidebarFooter className="p-4">
                 {loading ? (
-                    <div className="h-12 w-full bg-muted animate-pulse rounded-xl" />
+                    <div className="flex items-center gap-3 px-2">
+                        <div className="h-8 w-8 bg-muted animate-pulse rounded-lg" />
+                        <div className="flex flex-col gap-1 flex-1">
+                            <div className="h-3 w-20 bg-muted animate-pulse rounded" />
+                            <div className="h-2 w-24 bg-muted animate-pulse rounded" />
+                        </div>
+                    </div>
                 ) : (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <SidebarMenuButton size="lg" className="h-12 w-full justify-start gap-3 px-2 transition-all hover:bg-accent/50 rounded-xl">
                                 <Avatar className="h-8 w-8 rounded-lg border">
                                     <AvatarFallback className="bg-primary/10 text-primary">
-                                        {user?.name?.substring(0, 2).toUpperCase() || "UN"}
+                                        {user?.name?.substring(0, 2).toUpperCase() || "AD"}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="flex flex-col items-start text-xs truncate">
-                                    <span className="font-semibold truncate w-full text-left">{user?.name || "Usuário"}</span>
-                                    <span className="text-muted-foreground truncate w-full text-left">{user?.email || "carregando..."}</span>
+                                    <span className="font-semibold truncate w-full text-left">{user?.name || "Administrador"}</span>
+                                    <span className="text-muted-foreground truncate w-full text-left font-mono text-[10px]">{user?.email || "Admin Master"}</span>
                                 </div>
                             </SidebarMenuButton>
                         </DropdownMenuTrigger>

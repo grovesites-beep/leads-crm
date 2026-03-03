@@ -12,7 +12,20 @@ export async function getLoggedInUser() {
     try {
         const { getAccount } = await createSessionClient();
         const user = await getAccount().get();
-        return user;
+        if (!user) return null;
+
+        // Tentar buscar as labels via Admin API se possível, mas não travar se falhar
+        try {
+            const { getUsers } = await createAdminClient();
+            const userData = await getUsers().get(user.$id);
+            return {
+                ...user,
+                labels: userData.labels || []
+            };
+        } catch (e) {
+            // Se falhar o admin api, devolve o user basico (o email check do código dará conta)
+            return user;
+        }
     } catch (error) {
         return null;
     }
@@ -177,9 +190,11 @@ export async function getLeads() {
         const { getDatabases } = await createSessionClient();
         const queries = [Query.orderDesc("$createdAt")];
 
+        // Verificação MASTER de Admin (E-mail ou Label)
+        const emailLower = user.email?.toLowerCase().trim();
         const isAdmin = user.labels?.includes('admin') ||
-            user.email?.toLowerCase().trim() === 'admin@grovehub.com.br' ||
-            user.email?.toLowerCase().trim() === 'nei@grovehub.com.br';
+            emailLower === 'admin@grovehub.com.br' ||
+            emailLower === 'nei@grovehub.com.br';
 
         // Se for cliente, filtrar apenas os leads dele
         if (!isAdmin) {
