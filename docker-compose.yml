@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  crm-leads:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APPWRITE_ENDPOINT: ${NEXT_PUBLIC_APPWRITE_ENDPOINT}
+        NEXT_PUBLIC_APPWRITE_PROJECT_ID: ${NEXT_PUBLIC_APPWRITE_PROJECT_ID}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    container_name: crm-leads
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - APPWRITE_API_KEY=${APPWRITE_API_KEY}
+      - APPWRITE_DATABASE_ID=${APPWRITE_DATABASE_ID}
+      - APPWRITE_COLLECTION_CLIENTS=${APPWRITE_COLLECTION_CLIENTS}
+      - APPWRITE_COLLECTION_LEADS=${APPWRITE_COLLECTION_LEADS}
+      - APPWRITE_COLLECTION_SETTINGS=${APPWRITE_COLLECTION_SETTINGS}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+    networks:
+      - crm-network
+
+networks:
+  crm-network:
+    driver: bridge
