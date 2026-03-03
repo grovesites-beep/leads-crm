@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Rotas públicas que não precisam de autenticação
-const ROTAS_PUBLICAS = ['/login', '/api/webhook'];
+// Rotas que NÃO precisam de autenticação
+const ROTAS_PUBLICAS = [
+    '/login',
+    '/api/', // Todas as rotas de API são tratadas internamente (webhook, autenticar, etc.)
+];
 
 /**
  * Middleware de autenticação e controle de acesso
  * Redireciona usuários não autenticados para /login
- * A verificação de role é feita nas Server Actions depois do login
+ * Rotas de API (/api/*) são públicas — cada uma faz sua própria validação internamente
  */
 export function middleware(requisicao: NextRequest) {
     const { pathname } = requisicao.nextUrl;
@@ -15,7 +18,7 @@ export function middleware(requisicao: NextRequest) {
     // Permite acesso a rotas públicas
     const ehRotaPublica = ROTAS_PUBLICAS.some(rota => pathname.startsWith(rota));
     if (ehRotaPublica) {
-        // Se já está autenticado e tenta acessar /login, redireciona para /dashboard
+        // Se já está autenticado e tenta acessar /login, redireciona para a área correta
         if (cookieSessao?.value && pathname === '/login') {
             return NextResponse.redirect(new URL('/dashboard', requisicao.url));
         }
@@ -33,6 +36,7 @@ export function middleware(requisicao: NextRequest) {
 }
 
 export const config = {
+    // Aplica o middleware apenas em rotas de página, excluindo assets estáticos e arquivos
     matcher: [
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
