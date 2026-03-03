@@ -33,10 +33,17 @@ export async function getLoggedInUser() {
 
 export async function signIn(email: string, password: string) {
     try {
-        const { getAccount } = await createAdminClient();
-        const account = getAccount();
+        console.log("Tentando login para:", email);
+        const { Client, Account } = require('node-appwrite');
+
+        const client = new Client()
+            .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+            .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
+
+        const account = new Account(client);
 
         const session = await account.createEmailPasswordSession(email, password);
+        console.log("Sessão criada com sucesso!");
 
         (await cookies()).set(SESSION_COOKIE, session.secret, {
             path: "/",
@@ -48,6 +55,7 @@ export async function signIn(email: string, password: string) {
 
         return { success: true };
     } catch (error: any) {
+        console.error("Erro no signIn:", error.message);
         return { success: false, error: error.message };
     }
 }
