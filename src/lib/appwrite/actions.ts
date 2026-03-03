@@ -48,13 +48,17 @@ export async function signIn(email: string, password: string) {
         (await cookies()).set(SESSION_COOKIE, session.secret, {
             path: "/",
             httpOnly: true,
-            sameSite: "strict",
+            sameSite: "lax",
             secure: process.env.NODE_ENV === "production",
             expires: new Date(session.expire)
         });
 
-        return { success: true };
+        console.log("Cookie definido. Redirecionando...");
+        redirect("/dashboard");
     } catch (error: any) {
+        // Ignorar o erro do próprio NextJS redirect()
+        if (error.digest?.startsWith("NEXT_REDIRECT")) throw error;
+
         console.error("Erro no signIn:", error.message);
         return { success: false, error: error.message };
     }
