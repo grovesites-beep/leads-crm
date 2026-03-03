@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client, Account } from 'node-appwrite';
-import { cookies } from 'next/headers';
 
 /**
- * API Route: Proxy de login server-side
+ * API Route: Proxy de login server-side para o Appwrite
  * POST /api/autenticar
  *
- * O login é feito do SERVIDOR para o Appwrite, não do browser.
- * Isso elimina completamente a necessidade de plataforma Web cadastrada no Appwrite,
- * pois CORS não se aplica a requisições servidor-para-servidor.
+ * Usa fetch diretamente na REST API do Appwrite (mais confiável que o SDK em Route Handlers).
+ * Por ser server-side, não há CORS e não é necessário plataforma Web cadastrada no Appwrite.
  */
 export async function POST(req: NextRequest) {
     try {
-        const { email, senha } = await req.json();
+        const corpo = await req.json();
+        const { email, senha } = corpo;
 
         if (!email || !senha) {
             return NextResponse.json(
@@ -21,33 +19,66 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Cria um cliente público (sem API Key) — a sessão é do usuário, não do admin
-        const cliente = new Client()
-            .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-            .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+        const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!;
+        const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!;
 
-        const conta = new Account(cliente);
+        // 1. Cria sessão via REST API do Appwrite (server → Appwrite, sem CORS)
+        const respostaSessao = await fetch(`${endpoint}/account/sessions/email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': projectId,
+                'X-Appwrite-Response-Format': '1.0.0',
+            },
+            body: JSON.stringify({ email, password: senha }),
+        });
 
-        // Cria a sessão no servidor (evita CORS do browser)
-        const sessao = await conta.createEmailPasswordSession(email, senha);
+        const dadosSessao = await respostaSessao.json();
 
-        // Obtém o usuário para verificar o papel (role)
-        const clienteComSessao = new Client()
-            .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-            .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-            .setSession(sessao.secret);
+        if (!respostaSessao.ok) {
+            console.error('[/api/autenticar] Appwrite sessão erro:', dadosSessao);
 
-        const contaComSessao = new Account(clienteComSessao);
-        const usuario = await contaComSessao.get();
+            if (respostaSessao.status === 401 || dadosSessao.type === 'user_invalid_credentials') {
+                return NextResponse.json(
+                    { sucesso: false, erro: 'E-mail ou senha incorretos.' },
+                    { status: 401 }
+                );
+            }
+            if (respostaSessao.status === 429) {
+                return NextResponse.json(
+                    { sucesso: false, erro: 'Muitas tentativas. Aguarde alguns minutos.' },
+                    { status: 429 }
+                );
+            }
+            return NextResponse.json(
+                { sucesso: false, erro: dadosSessao.message || 'Erro ao autenticar.' },
+                { status: respostaSessao.status }
+            );
+        }
 
-        // Define o papel: admin ou cliente
+        const secretSessao: string = dadosSessao.secret;
+
+        // 2. Busca dados do usuário com a sessão criada
+        const respostaUsuario = await fetch(`${endpoint}/account`, {
+            headers: {
+                'X-Appwrite-Project': projectId,
+                'X-Appwrite-Session': secretSessao,
+                'X-Appwrite-Response-Format': '1.0.0',
+            },
+        });
+
+        const dadosUsuario = await respostaUsuario.json();
+
+        // 3. Determina o papel (role) do usuário
         const emailAdmin = process.env.ADMIN_EMAIL || 'nei@grovehub.com.br';
-        const ehAdmin = (Array.isArray(usuario.labels) && usuario.labels.includes('admin')) ||
-            usuario.email === emailAdmin;
+        const temLabelAdmin = Array.isArray(dadosUsuario.labels) && dadosUsuario.labels.includes('admin');
+        const ehAdmin = temLabelAdmin || dadosUsuario.email === emailAdmin;
+        const redirecionarPara = ehAdmin ? '/admin' : '/dashboard';
 
-        // Armazena o cookie de sessão de forma segura (httpOnly)
-        const lojaCookies = await cookies();
-        lojaCookies.set('sessao-appwrite', sessao.secret, {
+        // 4. Cria a resposta e define o cookie httpOnly com o secret da sessão
+        const resposta = NextResponse.json({ sucesso: true, redirecionarPara });
+
+        resposta.cookies.set('sessao-appwrite', secretSessao, {
             path: '/',
             httpOnly: true,
             sameSite: 'lax',
@@ -55,32 +86,12 @@ export async function POST(req: NextRequest) {
             maxAge: 60 * 60 * 24 * 30, // 30 dias
         });
 
-        return NextResponse.json({
-            sucesso: true,
-            redirecionarPara: ehAdmin ? '/admin' : '/dashboard',
-        });
+        return resposta;
 
-    } catch (erro: unknown) {
-        console.error('[/api/autenticar]', erro);
-
-        const msg = erro instanceof Error ? erro.message : String(erro);
-
-        if (msg.includes('Invalid credentials') || msg.includes('user_invalid_credentials')) {
-            return NextResponse.json(
-                { sucesso: false, erro: 'E-mail ou senha incorretos. Verifique suas credenciais.' },
-                { status: 401 }
-            );
-        }
-
-        if (msg.includes('Rate limit') || msg.includes('rate_limit')) {
-            return NextResponse.json(
-                { sucesso: false, erro: 'Muitas tentativas. Aguarde alguns minutos.' },
-                { status: 429 }
-            );
-        }
-
+    } catch (erro) {
+        console.error('[/api/autenticar] Exceção não tratada:', erro);
         return NextResponse.json(
-            { sucesso: false, erro: 'Erro ao fazer login. Tente novamente.' },
+            { sucesso: false, erro: 'Erro interno do servidor. Tente novamente.' },
             { status: 500 }
         );
     }
