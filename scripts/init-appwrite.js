@@ -40,8 +40,20 @@ const initAppwrite = async () => {
         console.log(`NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID=${leadsCollectionId}`);
         console.log(`NEXT_PUBLIC_APPWRITE_SETTINGS_COLLECTION_ID=${settingsCollectionId}`);
 
+        // Inicializar documento padrão de configurações
+        try {
+            await databases.createDocument(databaseId, settingsCollectionId, 'global', {
+                appName: "Grove Leads CRM",
+                primaryColor: "#000000"
+            });
+            console.log('✅ Documento de configurações globais criado.');
+        } catch (e) {
+            console.log('ℹ️ Documento de configurações já existe.');
+        }
+
+        console.log('🚀 Appwrite inicializado com sucesso!');
     } catch (error) {
-        console.error('Erro ao inicializar Appwrite:', error);
+        console.error('❌ Erro ao inicializar Appwrite:', error);
     }
 };
 

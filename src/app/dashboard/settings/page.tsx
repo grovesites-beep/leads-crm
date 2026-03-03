@@ -15,23 +15,52 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
     Palette,
-    Settings2,
     Link as LinkIcon,
     ShieldCheck,
     Copy,
     ExternalLink,
-    Check
+    Check,
+    Loader2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { getSettings, updateSettings } from "@/lib/appwrite/actions";
 
 export default function SettingsPage() {
     const [copied, setCopied] = useState(false);
     const [webhookUrl, setWebhookUrl] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    // Form fields
+    const [appName, setAppName] = useState("");
+    const [primaryColor, setPrimaryColor] = useState("");
 
     useEffect(() => {
         setWebhookUrl(`${window.location.protocol}//${window.location.host}/api/webhooks/n8n`);
+        loadSettings();
     }, []);
+
+    const loadSettings = async () => {
+        setLoading(true);
+        const result = await getSettings();
+        if (result.success && result.settings) {
+            setAppName(result.settings.appName || "");
+            setPrimaryColor(result.settings.primaryColor || "#000000");
+        }
+        setLoading(false);
+    };
+
+    const handleSaveBranding = async () => {
+        setSaving(true);
+        const result = await updateSettings({ appName, primaryColor });
+        if (result.success) {
+            toast.success("Configurações salvas com sucesso!");
+        } else {
+            toast.error("Erro ao salvar: " + result.error);
+        }
+        setSaving(false);
+    };
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(webhookUrl);
@@ -39,6 +68,14 @@ export default function SettingsPage() {
         toast.success("URL copiada com sucesso!");
         setTimeout(() => setCopied(false), 2000);
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -77,20 +114,37 @@ export default function SettingsPage() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="app-name">Nome da Aplicação</Label>
-                                    <Input id="app-name" defaultValue="Grove Leads CRM" />
+                                    <Input
+                                        id="app-name"
+                                        value={appName}
+                                        onChange={(e) => setAppName(e.target.value)}
+                                        placeholder="Ex: Grove Leads CRM"
+                                    />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="primary-color">Cor Primária</Label>
                                         <div className="flex gap-2">
-                                            <Input id="primary-color" type="color" className="p-1 h-10 w-12" defaultValue="#000000" />
-                                            <Input defaultValue="#000000" />
+                                            <Input
+                                                id="primary-color"
+                                                type="color"
+                                                className="p-1 h-10 w-12 cursor-pointer"
+                                                value={primaryColor}
+                                                onChange={(e) => setPrimaryColor(e.target.value)}
+                                            />
+                                            <Input
+                                                value={primaryColor}
+                                                onChange={(e) => setPrimaryColor(e.target.value)}
+                                            />
                                         </div>
                                     </div>
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button>Salvar Branding</Button>
+                                <Button onClick={handleSaveBranding} disabled={saving}>
+                                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Salvar Branding
+                                </Button>
                             </CardFooter>
                         </Card>
                     </TabsContent>
@@ -175,11 +229,11 @@ export default function SettingsPage() {
 // Badge Component Proxy for simple use here
 function Badge({ children, variant = "default", className = "" }: any) {
     const variants: any = {
-        default: "bg-primary text-primary-foreground",
-        outline: "border text-foreground"
+        default: "bg-primary text-primary-foreground text-xs",
+        outline: "border text-foreground text-xs"
     };
     return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
+        <span className={`px-2 py-0.5 rounded-full font-medium ${variants[variant]} ${className}`}>
             {children}
         </span>
     );
