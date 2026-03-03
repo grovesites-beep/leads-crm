@@ -1,30 +1,12 @@
-import { createAdminClient } from "@/lib/appwrite/server";
 import { LeadsDataTable, Lead } from "@/components/leads/data-table";
-import { Query } from "node-appwrite";
 import { BlurFade } from "@/components/magicui/blur-fade";
+import { getLeads } from "@/lib/appwrite/actions";
 
 export const dynamic = "force-dynamic";
 
-async function getLeads(): Promise<Lead[]> {
-    try {
-        const { getDatabases } = await createAdminClient();
-        const databases = getDatabases();
-
-        const response = await databases.listDocuments(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
-            [Query.orderDesc("$createdAt")]
-        );
-
-        return response.documents as unknown as Lead[];
-    } catch (error) {
-        console.error("Erro ao carregar leads:", error);
-        return [];
-    }
-}
-
 export default async function LeadsPage() {
-    const leads = await getLeads();
+    const res = await getLeads();
+    const leads = (res.success ? res.leads : []) as unknown as Lead[];
 
     return (
         <div className="flex flex-col gap-6">
@@ -32,7 +14,7 @@ export default async function LeadsPage() {
                 <div className="flex flex-col gap-2">
                     <h1 className="text-3xl font-bold tracking-tight">Leads Captados</h1>
                     <p className="text-muted-foreground">
-                        Gerencie e visualize todos os contatos captados através das suas landing pages.
+                        Visualize e gerencie os contatos exclusivos da sua conta.
                     </p>
                 </div>
             </BlurFade>

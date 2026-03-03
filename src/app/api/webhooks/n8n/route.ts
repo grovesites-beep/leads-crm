@@ -4,12 +4,21 @@ import { ID } from "node-appwrite";
 
 export async function POST(req: NextRequest) {
     try {
-        const payload = await req.json();
-        console.log("Recebendo Lead do Webhook:", payload);
+        const { searchParams } = new URL(req.url);
+        const clientId = searchParams.get("clientId");
 
-        // Mapeamento dos campos vindo do n8n/form
-        // Ajuste conforme o formato que o n8n envia
+        if (!clientId) {
+            return NextResponse.json({
+                success: false,
+                error: "Parâmetro clientId é obrigatório na URL do webhook."
+            }, { status: 400 });
+        }
+
+        const payload = await req.json();
+        console.log(`Recebendo Lead para cliente ${clientId}:`, payload);
+
         const leadData = {
+            clientId: clientId, // Vínculo essencial para o Multi-tenancy
             name: payload.nome || payload.name || "Sem Nome",
             email: payload.email || "sem@email.com",
             phone: payload.telefone || payload.phone || "",
@@ -29,7 +38,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: "Lead captado com sucesso",
+            message: "Lead captado e vinculado ao cliente com sucesso",
             id: response.$id
         }, { status: 201 });
 

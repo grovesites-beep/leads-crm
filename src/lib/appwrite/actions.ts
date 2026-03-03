@@ -1,11 +1,21 @@
 "use server"
 
-import { ID } from "node-appwrite";
+import { ID, Query } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "./server";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "./auth";
 import { redirect } from "next/navigation";
 
+// --- AUTH & SESSION ---
+
+export async function getLoggedInUser() {
+    try {
+        const { getAccount } = await createSessionClient();
+        return await getAccount().get();
+    } catch (error) {
+        return null;
+    }
+}
 
 export async function signIn(email: string, password: string) {
     try {
@@ -40,34 +50,73 @@ export async function signOut() {
     redirect("/login");
 }
 
-export async function updateSettings(data: { appName: string, primaryColor: string }) {
-    try {
-        const { getDatabases } = await createSessionClient();
-        const databases = getDatabases();
+// --- CLIENT MANAGEMENT (ADMIN ONLY) ---
 
-        await databases.updateDocument(
+export async function createClient(data: { name: string, email: string, password: string }) {
+    try {
+        const { getUsers, getDatabases } = await createAdminClient();
+
+        // 1. Criar Usuário no Auth
+        const newUser = await getUsers().create(ID.unique(), data.email, undefined, data.password, data.name);
+
+        // 2. Adicionar Label 'client'
+        await getUsers().updateLabels(newUser.$id, ['client']);
+
+        // 3. Criar Documento na Coleção de Clientes
+        await getDatabases().createDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            process.env.NEXT_PUBLIC_APPWRITE_SETTINGS_COLLECTION_ID!,
-            'global',
-            data
+            process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
+            ID.unique(),
+            {
+                name: data.name,
+                email: data.email,
+                userId: newUser.$id,
+                slug: data.name.toLowerCase().replace(/ /g, '-'),
+                branding: JSON.stringify({ primaryColor: "#000000" })
+            }
         );
+
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
     }
 }
 
-export async function getSettings() {
+export async function getClients() {
     try {
         const { getDatabases } = await createSessionClient();
-        const databases = getDatabases();
-
-        const settings = await databases.getDocument(
+        const clients = await getDatabases().listDocuments(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            process.env.NEXT_PUBLIC_APPWRITE_SETTINGS_COLLECTION_ID!,
-            'global'
+            process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!
         );
-        return { success: true, settings };
+        return { success: true, clients: clients.documents };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// --- LEADS ---
+
+export async function getLeads() {
+    try {
+        const user = await getLoggedInUser();
+        if (!user) throw new Error("Não autorizado");
+
+        const { getDatabases } = await createSessionClient();
+        const queries = [];
+
+        // Se for cliente, filtrar apenas os leads dele
+        if (user.labels?.includes('client')) {
+            queries.push(Query.equal('clientId', user.$id));
+        }
+
+        const leads = await getDatabases().listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
+            queries
+        );
+
+        return { success: true, leads: leads.documents };
     } catch (error: any) {
         return { success: false, error: error.message };
     }
@@ -76,9 +125,7 @@ export async function getSettings() {
 export async function deleteLead(leadId: string) {
     try {
         const { getDatabases } = await createSessionClient();
-        const databases = getDatabases();
-
-        await databases.deleteDocument(
+        await getDatabases().deleteDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
             leadId

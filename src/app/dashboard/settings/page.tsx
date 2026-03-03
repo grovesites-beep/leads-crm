@@ -24,25 +24,34 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { getSettings, updateSettings } from "@/lib/appwrite/actions";
+import { getSettings, updateSettings, getLoggedInUser } from "@/lib/appwrite/actions";
 
 export default function SettingsPage() {
     const [copied, setCopied] = useState(false);
     const [webhookUrl, setWebhookUrl] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [user, setUser] = useState<any>(null);
 
     // Form fields
     const [appName, setAppName] = useState("");
     const [primaryColor, setPrimaryColor] = useState("");
 
     useEffect(() => {
-        setWebhookUrl(`${window.location.protocol}//${window.location.host}/api/webhooks/n8n`);
-        loadSettings();
+        loadData();
     }, []);
 
-    const loadSettings = async () => {
+    const loadData = async () => {
         setLoading(true);
+        const loggedUser = await getLoggedInUser();
+        setUser(loggedUser);
+
+        if (loggedUser) {
+            // Webhook único por cliente
+            const baseUrl = `${window.location.protocol}//${window.location.host}/api/webhooks/n8n`;
+            setWebhookUrl(`${baseUrl}?clientId=${loggedUser.$id}`);
+        }
+
         const result = await getSettings();
         if (result.success && result.settings) {
             setAppName(result.settings.appName || "");
@@ -77,112 +86,118 @@ export default function SettingsPage() {
         );
     }
 
+    const isAdmin = user?.labels?.includes('admin') || user?.email === 'admin@grovehub.com.br';
+
     return (
         <div className="flex flex-col gap-6">
             <BlurFade delay={0.1} inView>
                 <div className="flex flex-col gap-2">
                     <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
                     <p className="text-muted-foreground">
-                        Personalize a aparência do sistema, gerencie integrações e controle permissões.
+                        {isAdmin ? "Gerencie a plataforma globalmente." : "Configure sua integração e visual."}
                     </p>
                 </div>
             </BlurFade>
 
             <BlurFade delay={0.2} inView>
-                <Tabs defaultValue="branding" className="w-full">
+                <Tabs defaultValue={isAdmin ? "branding" : "integrations"} className="w-full">
                     <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-                        <TabsTrigger value="branding" className="flex items-center gap-2">
-                            <Palette className="h-4 w-4" /> Branding
-                        </TabsTrigger>
+                        {isAdmin && (
+                            <TabsTrigger value="branding" className="flex items-center gap-2">
+                                <Palette className="h-4 w-4" /> Branding
+                            </TabsTrigger>
+                        )}
                         <TabsTrigger value="integrations" className="flex items-center gap-2">
                             <LinkIcon className="h-4 w-4" /> Integrações
                         </TabsTrigger>
                         <TabsTrigger value="permissions" className="flex items-center gap-2">
-                            <ShieldCheck className="h-4 w-4" /> Permissões
+                            <ShieldCheck className="h-4 w-4" /> Conta
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* Branding Tab */}
-                    <TabsContent value="branding" className="space-y-4 mt-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Identidade Visual</CardTitle>
-                                <CardDescription>
-                                    Altere o nome da aplicação e as cores globais.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="app-name">Nome da Aplicação</Label>
-                                    <Input
-                                        id="app-name"
-                                        value={appName}
-                                        onChange={(e) => setAppName(e.target.value)}
-                                        placeholder="Ex: Grove Leads CRM"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Branding Tab (Admin only) */}
+                    {isAdmin && (
+                        <TabsContent value="branding" className="space-y-4 mt-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Identidade Visual Global</CardTitle>
+                                    <CardDescription>
+                                        Altere o nome da plataforma e as cores que seus clientes verão.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="primary-color">Cor Primária</Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                id="primary-color"
-                                                type="color"
-                                                className="p-1 h-10 w-12 cursor-pointer"
-                                                value={primaryColor}
-                                                onChange={(e) => setPrimaryColor(e.target.value)}
-                                            />
-                                            <Input
-                                                value={primaryColor}
-                                                onChange={(e) => setPrimaryColor(e.target.value)}
-                                            />
+                                        <Label htmlFor="app-name">Nome do Sistema</Label>
+                                        <Input
+                                            id="app-name"
+                                            value={appName}
+                                            onChange={(e) => setAppName(e.target.value)}
+                                            placeholder="Ex: Grove Leads CRM"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="primary-color">Cor de Destaque</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    id="primary-color"
+                                                    type="color"
+                                                    className="p-1 h-10 w-12 cursor-pointer"
+                                                    value={primaryColor}
+                                                    onChange={(e) => setPrimaryColor(e.target.value)}
+                                                />
+                                                <Input
+                                                    value={primaryColor}
+                                                    onChange={(e) => setPrimaryColor(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <Button onClick={handleSaveBranding} disabled={saving}>
-                                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Salvar Branding
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </TabsContent>
+                                </CardContent>
+                                <CardFooter>
+                                    <Button onClick={handleSaveBranding} disabled={saving}>
+                                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Salvar Alterações
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        </TabsContent>
+                    )}
 
                     {/* Integrations Tab */}
                     <TabsContent value="integrations" className="space-y-4 mt-6">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Integração n8n / Webhooks</CardTitle>
+                                <CardTitle>Seu Webhook Exclusivo</CardTitle>
                                 <CardDescription>
-                                    Use a URL abaixo para enviar os leads de suas landing pages para este sistema.
+                                    Use esta URL no seu n8n. Cada lead enviado para cá aparecerá automaticamente no seu painel.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label>Sua URL de Webhook</Label>
+                                    <Label>URL de Captura</Label>
                                     <div className="flex gap-2">
-                                        <Input readOnly value={webhookUrl} className="bg-muted" />
+                                        <Input readOnly value={webhookUrl} className="bg-muted font-mono text-xs" />
                                         <Button variant="secondary" onClick={copyToClipboard}>
                                             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                                         </Button>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Envie um JSON POST para esta URL com campos como: nome, email, telefone e origem.
+                                    <p className="text-[10px] text-orange-500 font-bold uppercase">
+                                        ⚠️ Importante: Não compartilhe esta URL. Ela é exclusiva da sua conta.
                                     </p>
                                 </div>
                             </CardContent>
                             <CardFooter className="flex flex-col items-start gap-4">
-                                <div className="text-sm border rounded-md p-4 bg-muted/50 w-full">
-                                    <p className="font-semibold mb-2 flex items-center gap-2">
-                                        <ExternalLink className="h-4 w-4" /> Guia Rápido:
+                                <div className="text-sm border rounded-md p-4 bg-muted/50 w-full font-medium">
+                                    <p className="flex items-center gap-2 mb-2">
+                                        <ExternalLink className="h-4 w-4" /> Como integrar via n8n:
                                     </p>
-                                    <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                                        <li>Crie um workflow no n8n.</li>
-                                        <li>Utilize o nó "HTTP Request".</li>
-                                        <li>Configure o método como POST.</li>
-                                        <li>Cole a URL acima no campo URL do nó.</li>
-                                    </ol>
+                                    <ul className="list-disc list-inside space-y-1 text-muted-foreground text-xs">
+                                        <li>Crie um nó "HTTP Request" no n8n.</li>
+                                        <li>Método: POST</li>
+                                        <li>URL: Cole a URL acima completa.</li>
+                                        <li>JSON: Envie campos como `nome`, `email` e `telefone`.</li>
+                                    </ul>
                                 </div>
                             </CardFooter>
                         </Card>
@@ -192,32 +207,27 @@ export default function SettingsPage() {
                     <TabsContent value="permissions" className="space-y-4 mt-6">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Usuários e Permissões</CardTitle>
+                                <CardTitle>Detalhes da Conta</CardTitle>
                                 <CardDescription>
-                                    Gerencie quem tem acesso ao painel de leads.
+                                    Suas informações de acesso ao sistema.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="border rounded-md divide-y">
-                                    <div className="p-4 flex justify-between items-center">
-                                        <div>
-                                            <p className="font-medium">Administrador Principal</p>
-                                            <p className="text-sm text-muted-foreground">admin@grovehub.com.br</p>
-                                        </div>
-                                        <Badge>Dono</Badge>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center py-2 border-b">
+                                        <Label>Nome</Label>
+                                        <span className="text-sm font-medium">{user?.name}</span>
                                     </div>
-                                    <div className="p-4 flex justify-between items-center text-muted-foreground opacity-50">
-                                        <div>
-                                            <p className="font-medium">Vendedor (Exemplo)</p>
-                                            <p className="text-sm">comercial@cliente.com</p>
-                                        </div>
-                                        <Badge variant="outline">Visualizador</Badge>
+                                    <div className="flex justify-between items-center py-2 border-b">
+                                        <Label>E-mail</Label>
+                                        <span className="text-sm font-medium">{user?.email}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-2 border-b">
+                                        <Label>Tipo de Acesso</Label>
+                                        <Badge>{isAdmin ? "Administrador Master" : "Cliente"}</Badge>
                                     </div>
                                 </div>
                             </CardContent>
-                            <CardFooter>
-                                <Button variant="outline" disabled>Adicionar Novo Usuário (Breve)</Button>
-                            </CardFooter>
                         </Card>
                     </TabsContent>
                 </Tabs>
@@ -226,14 +236,9 @@ export default function SettingsPage() {
     );
 }
 
-// Badge Component Proxy for simple use here
-function Badge({ children, variant = "default", className = "" }: any) {
-    const variants: any = {
-        default: "bg-primary text-primary-foreground text-xs",
-        outline: "border text-foreground text-xs"
-    };
+function Badge({ children }: { children: React.ReactNode }) {
     return (
-        <span className={`px-2 py-0.5 rounded-full font-medium ${variants[variant]} ${className}`}>
+        <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
             {children}
         </span>
     );

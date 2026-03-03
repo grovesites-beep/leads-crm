@@ -3,6 +3,7 @@ import { MagicCard } from "@/components/magicui/magic-card";
 import { Users, Webhook, MousePointerClick, TrendingUp } from "lucide-react";
 import { createSessionClient } from "@/lib/appwrite/server";
 import { Query } from "node-appwrite";
+import { getLoggedInUser } from "@/lib/appwrite/actions";
 
 export default async function DashboardPage() {
     let stats = [
@@ -13,14 +14,22 @@ export default async function DashboardPage() {
     ];
 
     try {
+        const user = await getLoggedInUser();
+        if (!user) return null;
+
         const { getDatabases } = await createSessionClient();
         const databases = getDatabases();
+
+        const baseQueries: string[] = [];
+        if (user.labels?.includes('client')) {
+            baseQueries.push(Query.equal('clientId', user.$id));
+        }
 
         // Buscar total de leads
         const leadsCount = await databases.listDocuments(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
-            [Query.limit(0)] // Só queremos o total
+            [...baseQueries, Query.limit(0)]
         );
 
         // Buscar leads do mês atual
@@ -30,6 +39,7 @@ export default async function DashboardPage() {
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
             [
+                ...baseQueries,
                 Query.greaterThanEqual("$createdAt", firstDayOfMonth),
                 Query.limit(0)
             ]
