@@ -4,6 +4,7 @@ import { Users, Webhook, MousePointerClick, TrendingUp, Building2 } from "lucide
 import { createSessionClient } from "@/lib/appwrite/server";
 import { Query } from "node-appwrite";
 import { getLoggedInUser } from "@/lib/appwrite/actions";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
     let stats = [
@@ -15,7 +16,10 @@ export default async function DashboardPage() {
 
     try {
         const user = await getLoggedInUser();
-        if (!user) return null;
+        if (!user) {
+            redirect("/login");
+            return;
+        }
 
         const { getDatabases } = await createSessionClient();
         const databases = getDatabases();
