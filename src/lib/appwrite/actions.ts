@@ -95,6 +95,42 @@ export async function getClients() {
     }
 }
 
+export async function deleteClient(clientId: string, userId: string) {
+    try {
+        const { getDatabases, getUsers } = await createAdminClient();
+
+        // 1. Deletar do Banco
+        await getDatabases().deleteDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
+            clientId
+        );
+
+        // 2. Deletar do Auth
+        await getUsers().delete(userId);
+
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updateClient(clientId: string, data: { name: string }) {
+    try {
+        const { getDatabases } = await createAdminClient();
+        await getDatabases().updateDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
+            clientId,
+            { name: data.name }
+        );
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+
 // --- SYSTEM SETTINGS ---
 
 export async function updateSettings(data: { appName: string, primaryColor: string }) {
@@ -138,10 +174,12 @@ export async function getLeads() {
         if (!user) throw new Error("Não autorizado");
 
         const { getDatabases } = await createSessionClient();
-        const queries = [];
+        const queries = [Query.orderDesc("$createdAt")];
+
+        const isAdmin = user.labels?.includes('admin') || user.email === 'admin@grovehub.com.br';
 
         // Se for cliente, filtrar apenas os leads dele
-        if (user.labels?.includes('client')) {
+        if (!isAdmin) {
             queries.push(Query.equal('clientId', user.$id));
         }
 
@@ -151,11 +189,25 @@ export async function getLeads() {
             queries
         );
 
+        // Se for admin, vamos tentar anexar o nome do cliente para visualização
+        if (isAdmin) {
+            const clientsRes = await getClients();
+            if (clientsRes.success && clientsRes.clients) {
+                const clientMap = new Map(clientsRes.clients.map((c: any) => [c.userId, c.name]));
+                const enrichedLeads = leads.documents.map((lead: any) => ({
+                    ...lead,
+                    clientName: clientMap.get(lead.clientId) || "Admin / Geral"
+                }));
+                return { success: true, leads: enrichedLeads };
+            }
+        }
+
         return { success: true, leads: leads.documents };
     } catch (error: any) {
         return { success: false, error: error.message };
     }
 }
+
 
 export async function deleteLead(leadId: string) {
     try {

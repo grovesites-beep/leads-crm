@@ -14,7 +14,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Search, Check, Copy, Trash2 } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Search, Trash2, Building2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -55,6 +55,7 @@ export type Lead = {
     phone: string;
     source: string;
     status: string;
+    clientName?: string;
     $createdAt: string;
 };
 
@@ -73,6 +74,21 @@ export const columns: ColumnDef<Lead>[] = [
             );
         },
         cell: ({ row }) => <div className="font-medium ml-4">{row.getValue("name")}</div>,
+    },
+    {
+        accessorKey: "clientName",
+        header: "Proprietário",
+        cell: ({ row }) => {
+            const clientName = row.getValue("clientName") as string;
+            if (!clientName) return null;
+            return (
+                <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 gap-1 font-bold">
+                        <Building2 className="h-3 w-3" /> {clientName}
+                    </Badge>
+                </div>
+            );
+        }
     },
     {
         accessorKey: "email",
@@ -168,6 +184,16 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
     const [rowSelection, setRowSelection] = React.useState({});
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
+    // Esconder a coluna de cliente se nenhum lead tiver clientName (ex: visão do cliente normal)
+    React.useEffect(() => {
+        const hasClientInfo = data.some(l => !!l.clientName);
+        if (!hasClientInfo) {
+            setColumnVisibility(prev => ({ ...prev, clientName: false }));
+        } else {
+            setColumnVisibility(prev => ({ ...prev, clientName: true }));
+        }
+    }, [data]);
+
     const table = useReactTable({
         data,
         columns,
@@ -226,11 +252,12 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
                                         }
                                     >
                                         {column.id === "name" ? "Nome" :
-                                            column.id === "email" ? "Email" :
-                                                column.id === "phone" ? "Telefone" :
-                                                    column.id === "source" ? "Origem" :
-                                                        column.id === "status" ? "Status" :
-                                                            column.id === "$createdAt" ? "Data" : column.id}
+                                            column.id === "clientName" ? "Proprietário" :
+                                                column.id === "email" ? "Email" :
+                                                    column.id === "phone" ? "Telefone" :
+                                                        column.id === "source" ? "Origem" :
+                                                            column.id === "status" ? "Status" :
+                                                                column.id === "$createdAt" ? "Data" : column.id}
                                     </DropdownMenuCheckboxItem>
                                 );
                             })}
@@ -320,6 +347,14 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
                         </SheetDescription>
                     </SheetHeader>
                     <div className="py-6 space-y-6">
+                        {selectedLead?.clientName && (
+                            <div className="space-y-1">
+                                <Label className="text-muted-foreground">Pertence ao Parceiro</Label>
+                                <div className="flex items-center gap-2 font-bold text-primary">
+                                    <Building2 className="h-4 w-4" /> {selectedLead?.clientName}
+                                </div>
+                            </div>
+                        )}
                         <div className="space-y-1">
                             <Label className="text-muted-foreground">Nome Completo</Label>
                             <p className="text-lg font-semibold">{selectedLead?.name}</p>

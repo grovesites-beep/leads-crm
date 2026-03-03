@@ -1,6 +1,6 @@
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MagicCard } from "@/components/magicui/magic-card";
-import { Users, Webhook, MousePointerClick, TrendingUp } from "lucide-react";
+import { Users, Webhook, MousePointerClick, TrendingUp, Building2 } from "lucide-react";
 import { createSessionClient } from "@/lib/appwrite/server";
 import { Query } from "node-appwrite";
 import { getLoggedInUser } from "@/lib/appwrite/actions";
@@ -20,8 +20,10 @@ export default async function DashboardPage() {
         const { getDatabases } = await createSessionClient();
         const databases = getDatabases();
 
+        const isAdmin = user.labels?.includes('admin') || user.email === 'admin@grovehub.com.br';
+
         const baseQueries: string[] = [];
-        if (user.labels?.includes('client')) {
+        if (!isAdmin) {
             baseQueries.push(Query.equal('clientId', user.$id));
         }
 
@@ -45,10 +47,25 @@ export default async function DashboardPage() {
             ]
         );
 
+        // Se for Admin, buscar total de clientes
+        let clientCount: number | null = null;
+        if (isAdmin) {
+            const clients = await databases.listDocuments(
+                process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+                process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
+                [Query.limit(0)]
+            );
+            clientCount = clients.total;
+        }
+
         stats = [
-            { title: "Total de Leads", value: leadsCount.total.toString(), change: "Até agora", icon: Users },
+            { title: "Total de Leads", value: leadsCount.total.toString(), change: isAdmin ? "Global" : "Até agora", icon: Users },
             { title: "Leads (Este Mês)", value: leadsMonth.total.toString(), change: "Mês atual", icon: TrendingUp },
-            { title: "Status Webhook", value: "Ativo", change: "Operacional", icon: Webhook },
+            ...(isAdmin ? [
+                { title: "Parceiros Ativos", value: (clientCount || 0).toString(), change: "SaaS Ativo", icon: Building2 }
+            ] : [
+                { title: "Status Webhook", value: "Ativo", change: "Operacional", icon: Webhook }
+            ]),
             { title: "Conversão (Simulada)", value: "8.2%", change: "+1.2%", icon: MousePointerClick },
         ];
     } catch (error) {
@@ -60,7 +77,7 @@ export default async function DashboardPage() {
             <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-bold tracking-tight">Painel de Controle</h1>
                 <p className="text-muted-foreground">
-                    Visão geral do desempenho das suas landing pages e captação de leads.
+                    Visão geral do desempenho e captação de leads.
                 </p>
             </div>
 
