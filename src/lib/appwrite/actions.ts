@@ -73,3 +73,18 @@ export async function getSettings() {
     }
 }
 
+export async function deleteLead(leadId: string) {
+    try {
+        const { getDatabases } = await createSessionClient();
+        const databases = getDatabases();
+
+        await databases.deleteDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
+            leadId
+        );
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}

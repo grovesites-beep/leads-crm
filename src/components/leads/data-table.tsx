@@ -14,9 +14,12 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Search, Check, Copy } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Search, Check, Copy, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { deleteLead } from "@/lib/appwrite/actions";
+import { useRouter } from "next/navigation";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -133,7 +136,23 @@ export const columns: ColumnDef<Lead>[] = [
                         <DropdownMenuItem onClick={() => setSelectedLead(lead)}>
                             Ver Detalhes
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+                        <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={async () => {
+                                if (confirm("Tem certeza que deseja excluir este lead?")) {
+                                    const res = await deleteLead(lead.$id);
+                                    if (res.success) {
+                                        toast.success("Lead excluído!");
+                                        // @ts-ignore
+                                        table.options.meta?.refresh();
+                                    } else {
+                                        toast.error("Erro ao excluir");
+                                    }
+                                }
+                            }}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
@@ -142,6 +161,7 @@ export const columns: ColumnDef<Lead>[] = [
 ];
 
 export function LeadsDataTable({ data }: { data: Lead[] }) {
+    const router = useRouter();
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -167,6 +187,7 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
         },
         meta: {
             setSelectedLead: (lead: Lead) => setSelectedLead(lead),
+            refresh: () => router.refresh()
         },
     });
 
