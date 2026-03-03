@@ -1,5 +1,3 @@
-"use server"
-
 import { Client, Account, Databases, Storage, Users } from 'node-appwrite';
 import { cookies } from 'next/headers';
 import { SESSION_COOKIE } from './auth';
@@ -22,12 +20,9 @@ export async function createSessionClient() {
 
         if (session && session.value) {
             client.setSession(session.value);
-        } else {
-            // Se não houver cookie, não throw erro aqui, apenas devolva o cliente sem sessão
-            // getLoggedInUser lidará com a falta de dados
         }
     } catch (e) {
-        // Silenciar erro de acesso a cookies em ambientes de build
+        // Silenciar erro em build time
     }
 
     return {

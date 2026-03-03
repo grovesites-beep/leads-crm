@@ -19,7 +19,7 @@ export async function generateMetadata() {
       'global'
     );
     return {
-      title: settings.appName || "Grove Leads CRM",
+      title: settings?.appName || "Grove Leads CRM",
       description: "Gerenciamento inteligente de Leads e Conversões.",
     };
   } catch (e) {
@@ -43,11 +43,11 @@ export default async function RootLayout({
       process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
       'global'
     );
-    if (settings.primaryColor) {
+    if (settings?.primaryColor) {
       primaryColor = settings.primaryColor;
     }
   } catch (e) {
-    console.warn("Aviso: Falha ao carregar branding no layout (possivelmente durante o build). Usando padrão.");
+    // Silenciar erro em build ou falha inicial
   }
 
   return (

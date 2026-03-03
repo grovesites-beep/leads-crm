@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
-import { createAdminClient, createSessionClient } from "./server";
-import { Account, ID } from "node-appwrite";
+import { createSessionClient } from "./server";
 
 export const SESSION_COOKIE = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT || "groveinc"}`;
 
@@ -9,19 +8,9 @@ export async function createSessionClientDirectly() {
     const session = cookieStore.get(SESSION_COOKIE);
 
     if (!session || !session.value) {
-        throw new Error("No session");
+        throw new Error("Sessão ausente");
     }
 
     const { getAccount } = await createSessionClient();
     return getAccount();
-}
-
-export async function getLoggedInUser() {
-    try {
-        const { getAccount } = await createSessionClient();
-        const account = getAccount();
-        return await account.get();
-    } catch (error) {
-        return null;
-    }
 }

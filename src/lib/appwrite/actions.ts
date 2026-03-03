@@ -14,7 +14,7 @@ export async function getLoggedInUser() {
         const user = await getAccount().get();
         if (!user) return null;
 
-        // Tentar buscar as labels via Admin API se possivel, mas sem travar
+        // Tentar obter etiquetas admin de forma segura
         try {
             const { getUsers } = await createAdminClient();
             const userData = await getUsers().get(user.$id);
@@ -23,10 +23,10 @@ export async function getLoggedInUser() {
                 labels: userData.labels || []
             };
         } catch (e) {
-            return user;
+            return { ...user, labels: [] };
         }
-    } catch (error: any) {
-        return null;
+    } catch (error) {
+        return null; // Apenas silencia e deixa o dashboard decidir se redireciona
     }
 }
 
@@ -35,9 +35,7 @@ export async function signIn(email: string, password: string) {
         const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
         const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
-        if (!endpoint || !project) {
-            throw new Error("Variáveis de ambiente do Appwrite não encontradas.");
-        }
+        if (!endpoint || !project) throw new Error("Configuração Appwrite faltando.");
 
         const client = new Client()
             .setEndpoint(endpoint)
@@ -56,25 +54,27 @@ export async function signIn(email: string, password: string) {
             expires: new Date(session.expire)
         });
 
+        // Revalidar apenas o dashboard em vez da raiz total
         try {
-            revalidatePath('/', 'layout');
+            revalidatePath('/dashboard');
         } catch (e) { }
 
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message || "Erro desconhecido ao autenticar." };
+        return { success: false, error: error.message };
     }
 }
 
 export async function signOut() {
-    const sessionCookie = (await cookies()).get(SESSION_COOKIE);
-    if (sessionCookie) {
-        try {
+    try {
+        const cookieStore = await cookies();
+        const session = cookieStore.get(SESSION_COOKIE);
+        if (session) {
             const { getAccount } = await createSessionClient();
             await getAccount().deleteSession('current');
-        } catch (error) { }
-    }
-    (await cookies()).delete(SESSION_COOKIE);
+        }
+        cookieStore.delete(SESSION_COOKIE);
+    } catch (error) { }
 }
 
 // --- CLIENT MANAGEMENT ---
@@ -151,11 +151,25 @@ export async function updateClient(clientId: string, data: { name: string }) {
     }
 }
 
-// --- SETTINGS ---
+// --- SETTINGS & LEADS ---
 
 export async function getPublicSettings() {
     try {
         const { getDatabases } = await createAdminClient();
+        const settings = await getDatabases().getDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
+            'global'
+        );
+        return { success: true, settings };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function getSettings() {
+    try {
+        const { getDatabases } = await createSessionClient();
         const settings = await getDatabases().getDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
@@ -182,31 +196,15 @@ export async function updateSettings(data: { appName: string, primaryColor: stri
     }
 }
 
-export async function getSettings() {
-    try {
-        const { getDatabases } = await createSessionClient();
-        const settings = await getDatabases().getDocument(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
-            'global'
-        );
-        return { success: true, settings };
-    } catch (error: any) {
-        return { success: false, error: error.message };
-    }
-}
-
-// --- LEADS ---
-
 export async function getLeads() {
     try {
         const user = await getLoggedInUser();
-        if (!user) throw new Error("Não autorizado");
+        if (!user) throw new Error("Sessão expirada. Faça login novamente.");
 
         const { getDatabases } = await createSessionClient();
         const queries = [Query.orderDesc("$createdAt")];
 
-        const emailLower = user.email?.toLowerCase().trim();
+        const emailLower = user.email?.toLowerCase().trim() || "";
         const isAdmin = user.labels?.includes('admin') ||
             emailLower === 'admin@grovehub.com.br' ||
             emailLower === 'nei@grovehub.com.br';
