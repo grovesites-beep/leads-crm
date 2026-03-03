@@ -22,12 +22,16 @@ import {
     ExternalLink,
     Check
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
     const [copied, setCopied] = useState(false);
-    const webhookUrl = `${window.location.protocol}//${window.location.host}/api/webhooks/n8n`;
+    const [webhookUrl, setWebhookUrl] = useState("");
+
+    useEffect(() => {
+        setWebhookUrl(`${window.location.protocol}//${window.location.host}/api/webhooks/n8n`);
+    }, []);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(webhookUrl);
