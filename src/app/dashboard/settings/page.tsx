@@ -86,7 +86,9 @@ export default function SettingsPage() {
         );
     }
 
-    const isAdmin = user?.labels?.includes('admin') || user?.email === 'admin@grovehub.com.br';
+    const isAdmin = user?.labels?.includes('admin') ||
+        user?.email === 'admin@grovehub.com.br' ||
+        user?.email === 'nei@grovehub.com.br';
 
     return (
         <div className="flex flex-col gap-6">

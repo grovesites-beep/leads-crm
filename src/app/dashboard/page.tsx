@@ -24,7 +24,9 @@ export default async function DashboardPage() {
         const { getDatabases } = await createSessionClient();
         const databases = getDatabases();
 
-        const isAdmin = user.labels?.includes('admin') || user.email === 'admin@grovehub.com.br';
+        const isAdmin = user.labels?.includes('admin') ||
+            user.email === 'admin@grovehub.com.br' ||
+            user.email === 'nei@grovehub.com.br';
 
         const baseQueries: string[] = [];
         if (!isAdmin) {

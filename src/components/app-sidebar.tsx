@@ -72,7 +72,9 @@ export function AppSidebar() {
 
     if (loading) return null;
 
-    const isAdmin = user?.labels?.includes('admin') || user?.email === 'admin@grovehub.com.br'; // Fallback para admin inicial
+    const isAdmin = user?.labels?.includes('admin') ||
+        user?.email === 'admin@grovehub.com.br' ||
+        user?.email === 'nei@grovehub.com.br';
 
     const menuGroups = [
         {
