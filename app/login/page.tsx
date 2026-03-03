@@ -41,8 +41,9 @@ export default function PaginaLogin() {
                 const resultado = await resposta.json();
 
                 if (resultado.sucesso) {
-                    toast.success('Login realizado com sucesso!');
-                    router.push(resultado.redirecionarPara);
+                    toast.success('Login realizado com sucesso! Redirecionando...');
+                    // Força um recarregamento total para garantir que o middleware processe o cookie
+                    window.location.href = resultado.redirecionarPara;
                 } else {
                     toast.error(resultado.erro || 'Erro ao fazer login.');
                 }
