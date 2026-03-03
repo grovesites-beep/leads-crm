@@ -1,6 +1,5 @@
-"use client";
-
 import * as React from "react";
+import { useState } from "react";
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -35,6 +34,14 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
 
 export type Lead = {
     $id: string;
@@ -100,8 +107,10 @@ export const columns: ColumnDef<Lead>[] = [
     {
         id: "actions",
         enableHiding: false,
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const lead = row.original;
+            // @ts-ignore
+            const setSelectedLead = table.options.meta?.setSelectedLead;
 
             return (
                 <DropdownMenu>
@@ -119,7 +128,9 @@ export const columns: ColumnDef<Lead>[] = [
                             Copiar ID do Lead
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSelectedLead(lead)}>
+                            Ver Detalhes
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">Excluir Lead</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -133,6 +144,7 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
     const table = useReactTable({
         data,
@@ -142,7 +154,7 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
+        getFilteredRowModel: getSortedRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
         state: {
@@ -151,6 +163,9 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
             columnVisibility,
             rowSelection,
         },
+        meta: {
+            setSelectedLead: (lead: Lead) => setSelectedLead(lead)
+        }
     });
 
     return (
@@ -179,7 +194,7 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
                             .filter((column) => column.getCanHide())
                             .map((column) => {
                                 return (
-                                    <DropdownMenuCheckboxItem
+_                                    <DropdownMenuCheckboxItem
                                         key={column.id}
                                         className="capitalize"
                                         checked={column.getIsVisible()}
@@ -272,6 +287,46 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
                     </Button>
                 </div>
             </div>
-        </div>
+
+            <Sheet open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
+                <SheetContent className="sm:max-w-md">
+                    <SheetHeader>
+                        <SheetTitle>Detalhes do Lead</SheetTitle>
+                        <SheetDescription>
+                            Informações completas captadas via landing page.
+                        </SheetDescription>
+                    </SheetHeader>
+                    <div className="py-6 space-y-6">
+                        <div className="space-y-1">
+                            <Label className="text-muted-foreground">Nome Completo</Label>
+                            <p className="text-lg font-semibold">{selectedLead?.name}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-muted-foreground">E-mail</Label>
+                            <p className="font-medium">{selectedLead?.email}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-muted-foreground">WhatsApp / Telefone</Label>
+                            <p className="font-medium">{selectedLead?.phone || "Não informado"}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-muted-foreground">Origem da Captação</Label>
+                            <div><Badge variant="secondary">{selectedLead?.source}</Badge></div>
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-muted-foreground">Data da Captação</Label>
+                            <p className="text-sm">
+                                {selectedLead?.$createdAt && new Date(selectedLead.$createdAt).toLocaleString("pt-BR")}
+                            </p>
+                        </div>
+                        <div className="pt-4 flex gap-2">
+                            <Button className="w-full" variant="outline" onClick={() => window.open(`https://wa.me/${selectedLead?.phone?.replace(/\D/g, "")}`, "_blank")}>
+                                Chamar no WhatsApp
+                            </Button>
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
+        </div >
     );
 }
