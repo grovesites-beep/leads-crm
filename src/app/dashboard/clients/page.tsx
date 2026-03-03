@@ -22,10 +22,12 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Building2, Mail, ExternalLink, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { createClient, getClients } from "@/lib/appwrite/actions";
+import { createClient, getClients, getLoggedInUser } from "@/lib/appwrite/actions";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function ClientsPage() {
+    const router = useRouter();
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,7 +39,17 @@ export default function ClientsPage() {
     const [password, setPassword] = useState("");
 
     useEffect(() => {
-        fetchClients();
+        async function checkAdmin() {
+            const user = await getLoggedInUser();
+            const isAdmin = user?.labels?.includes('admin') || user?.email === 'admin@grovehub.com.br';
+
+            if (!isAdmin) {
+                router.push("/dashboard");
+                return;
+            }
+            fetchClients();
+        }
+        checkAdmin();
     }, []);
 
     const fetchClients = async () => {
