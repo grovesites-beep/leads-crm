@@ -1,10 +1,9 @@
 "use server"
 
-import { ID, Query } from "node-appwrite";
+import { ID, Query, Client, Account } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "./server";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "./auth";
-import { redirect } from "next/navigation";
 
 // --- AUTH & SESSION ---
 
@@ -23,7 +22,6 @@ export async function getLoggedInUser() {
                 labels: userData.labels || []
             };
         } catch (e) {
-            // Se falhar o admin api, devolve o user basico (o email check do código dará conta)
             return user;
         }
     } catch (error) {
@@ -33,17 +31,20 @@ export async function getLoggedInUser() {
 
 export async function signIn(email: string, password: string) {
     try {
-        console.log("Tentando login para:", email);
-        const { Client, Account } = require('node-appwrite');
+        const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+        const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+
+        if (!endpoint || !project) {
+            throw new Error("Configurações do Appwrite ausentes.");
+        }
 
         const client = new Client()
-            .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-            .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
+            .setEndpoint(endpoint)
+            .setProject(project);
 
         const account = new Account(client);
 
         const session = await account.createEmailPasswordSession(email, password);
-        console.log("Sessão criada com sucesso!");
 
         (await cookies()).set(SESSION_COOKIE, session.secret, {
             path: "/",
@@ -53,12 +54,8 @@ export async function signIn(email: string, password: string) {
             expires: new Date(session.expire)
         });
 
-        console.log("Cookie definido. Redirecionando...");
-        redirect("/dashboard");
+        return { success: true };
     } catch (error: any) {
-        // Ignorar o erro do próprio NextJS redirect()
-        if (error.digest?.startsWith("NEXT_REDIRECT")) throw error;
-
         console.error("Erro no signIn:", error.message);
         return { success: false, error: error.message };
     }
@@ -73,7 +70,6 @@ export async function signOut() {
         } catch (error) { }
     }
     (await cookies()).delete(SESSION_COOKIE);
-    redirect("/login");
 }
 
 // --- CLIENT MANAGEMENT (ADMIN ONLY) ---
@@ -82,13 +78,9 @@ export async function createClient(data: { name: string, email: string, password
     try {
         const { getUsers, getDatabases } = await createAdminClient();
 
-        // 1. Criar Usuário no Auth
         const newUser = await getUsers().create(ID.unique(), data.email, undefined, data.password, data.name);
-
-        // 2. Adicionar Label 'client'
         await getUsers().updateLabels(newUser.$id, ['client']);
 
-        // 3. Criar Documento na Coleção de Clientes
         await getDatabases().createDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
@@ -125,14 +117,12 @@ export async function deleteClient(clientId: string, userId: string) {
     try {
         const { getDatabases, getUsers } = await createAdminClient();
 
-        // 1. Deletar do Banco
         await getDatabases().deleteDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_CLIENTS_COLLECTION_ID!,
             clientId
         );
 
-        // 2. Deletar do Auth
         await getUsers().delete(userId);
 
         return { success: true };
@@ -159,12 +149,24 @@ export async function updateClient(clientId: string, data: { name: string }) {
 
 // --- SYSTEM SETTINGS ---
 
+export async function getPublicSettings() {
+    try {
+        const { getDatabases } = await createAdminClient();
+        const settings = await getDatabases().getDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
+            'global'
+        );
+        return { success: true, settings };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 export async function updateSettings(data: { appName: string, primaryColor: string }) {
     try {
         const { getDatabases } = await createSessionClient();
-        const databases = getDatabases();
-
-        await databases.updateDocument(
+        await getDatabases().updateDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
             'global',
@@ -179,9 +181,7 @@ export async function updateSettings(data: { appName: string, primaryColor: stri
 export async function getSettings() {
     try {
         const { getDatabases } = await createSessionClient();
-        const databases = getDatabases();
-
-        const settings = await databases.getDocument(
+        const settings = await getDatabases().getDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
             'global'
@@ -202,13 +202,11 @@ export async function getLeads() {
         const { getDatabases } = await createSessionClient();
         const queries = [Query.orderDesc("$createdAt")];
 
-        // Verificação MASTER de Admin (E-mail ou Label)
         const emailLower = user.email?.toLowerCase().trim();
         const isAdmin = user.labels?.includes('admin') ||
             emailLower === 'admin@grovehub.com.br' ||
             emailLower === 'nei@grovehub.com.br';
 
-        // Se for cliente, filtrar apenas os leads dele
         if (!isAdmin) {
             queries.push(Query.equal('clientId', user.$id));
         }
@@ -219,7 +217,6 @@ export async function getLeads() {
             queries
         );
 
-        // Se for admin, vamos tentar anexar o nome do cliente para visualização
         if (isAdmin) {
             const clientsRes = await getClients();
             if (clientsRes.success && clientsRes.clients) {
@@ -237,7 +234,6 @@ export async function getLeads() {
         return { success: false, error: error.message };
     }
 }
-
 
 export async function deleteLead(leadId: string) {
     try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,11 +18,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { DotPattern } from "@/components/magicui/dot-pattern";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 
 import { LoginSchema } from "@/lib/validations/auth";
-import { signIn, getSettings } from "@/lib/appwrite/actions";
-import { useEffect } from "react";
+import { signIn, getPublicSettings } from "@/lib/appwrite/actions";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -32,9 +31,14 @@ export default function LoginPage() {
 
     useEffect(() => {
         async function loadSettings() {
-            const res = await getSettings();
-            if (res.success && res.settings?.appName) {
-                setAppName(res.settings.appName);
+            try {
+                // Usar a nova função pública que não exige sessão
+                const res = await getPublicSettings();
+                if (res.success && res.settings?.appName) {
+                    setAppName(res.settings.appName);
+                }
+            } catch (e) {
+                console.error("Falha ao carregar branding:", e);
             }
         }
         loadSettings();
@@ -52,13 +56,22 @@ export default function LoginPage() {
         setError(null);
         setIsPending(true);
 
-        const response = await signIn(values.email, values.password);
+        try {
+            const response = await signIn(values.email, values.password);
 
-        if (response?.error) {
-            setError(response.error);
+            if (response && response.success) {
+                // Forçar recarregamento completo para garantir inicialização da sessão
+                window.location.href = "/dashboard";
+            } else if (response && response.error) {
+                setError(response.error);
+                setIsPending(false);
+            } else {
+                setError("Erro inesperado no servidor. Tente novamente.");
+                setIsPending(false);
+            }
+        } catch (err: any) {
+            setError("Falha na conexão com o sistema.");
             setIsPending(false);
-        } else {
-            router.push("/dashboard");
         }
     };
 
@@ -73,27 +86,28 @@ export default function LoginPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-center">
                         Acessar Painel
                     </h1>
-                    <p className="text-muted-foreground mt-2 text-center">
-                        Gerencie seus leads e as conexões do sistema
+                    <p className="text-muted-foreground mt-2 text-center text-sm">
+                        Gerencie seus parceiros e conecte seus leads
                     </p>
                 </BlurFade>
 
-                <BlurFade delay={0.25 * 2} inView>
-                    <div className="bg-card w-full border rounded-2xl p-6 shadow-sm">
+                <BlurFade delay={0.5} inView>
+                    <div className="bg-card w-full border rounded-2xl p-8 shadow-2xl backdrop-blur-sm bg-white/80 dark:bg-black/80">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                                 <FormField
                                     control={form.control}
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Email</FormLabel>
+                                            <FormLabel className="text-xs font-bold uppercase tracking-wider opacity-60">Email de Acesso</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     {...field}
                                                     disabled={isPending}
-                                                    placeholder="admin@grovehub.com.br"
+                                                    placeholder="seu@email.com.br"
                                                     type="email"
+                                                    className="h-11 rounded-xl bg-muted/50 border-muted-foreground/10 focus:ring-primary/20"
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -106,13 +120,14 @@ export default function LoginPage() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Senha</FormLabel>
+                                            <FormLabel className="text-xs font-bold uppercase tracking-wider opacity-60">Senha</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     {...field}
                                                     disabled={isPending}
-                                                    placeholder="******"
+                                                    placeholder="••••••••"
                                                     type="password"
+                                                    className="h-11 rounded-xl bg-muted/50 border-muted-foreground/10 focus:ring-primary/20"
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -121,13 +136,22 @@ export default function LoginPage() {
                                 />
 
                                 {error && (
-                                    <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+                                    <div className="bg-destructive/10 text-destructive text-[13px] px-4 py-3 rounded-xl border border-destructive/20 font-medium">
                                         {error}
                                     </div>
                                 )}
 
-                                <Button disabled={isPending} type="submit" className="w-full">
-                                    {isPending ? "Entrando..." : "Entrar"}
+                                <Button
+                                    disabled={isPending}
+                                    type="submit"
+                                    className="w-full h-11 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    {isPending ? (
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <span>Autenticando...</span>
+                                        </div>
+                                    ) : "Entrar no Sistema"}
                                 </Button>
                             </form>
                         </Form>
@@ -137,12 +161,12 @@ export default function LoginPage() {
             </div>
 
             <DotPattern
-                width={20}
-                height={20}
+                width={24}
+                height={24}
                 cx={1}
                 cy={1}
                 cr={1}
-                className="[mask-image:radial-gradient(600px_circle_at_center,white,transparent)]"
+                className="[mask-image:radial-gradient(450px_circle_at_center,white,transparent)] opacity-40"
             />
         </div>
     );
