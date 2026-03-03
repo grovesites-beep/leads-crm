@@ -1,8 +1,50 @@
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { Users, Webhook, MousePointerClick, TrendingUp } from "lucide-react";
+import { createSessionClient } from "@/lib/appwrite/server";
+import { Query } from "node-appwrite";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+    let stats = [
+        { title: "Total de Leads", value: "0", change: "...", icon: Users },
+        { title: "Leads (Este Mês)", value: "0", change: "...", icon: TrendingUp },
+        { title: "Status Webhook", value: "Ativo", change: "Operacional", icon: Webhook },
+        { title: "Conversão (Simulada)", value: "8.2%", change: "+1.2%", icon: MousePointerClick },
+    ];
+
+    try {
+        const { getDatabases } = await createSessionClient();
+        const databases = getDatabases();
+
+        // Buscar total de leads
+        const leadsCount = await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
+            [Query.limit(0)] // Só queremos o total
+        );
+
+        // Buscar leads do mês atual
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const leadsMonth = await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_LEADS_COLLECTION_ID!,
+            [
+                Query.greaterThanEqual("$createdAt", firstDayOfMonth),
+                Query.limit(0)
+            ]
+        );
+
+        stats = [
+            { title: "Total de Leads", value: leadsCount.total.toString(), change: "Até agora", icon: Users },
+            { title: "Leads (Este Mês)", value: leadsMonth.total.toString(), change: "Mês atual", icon: TrendingUp },
+            { title: "Status Webhook", value: "Ativo", change: "Operacional", icon: Webhook },
+            { title: "Conversão (Simulada)", value: "8.2%", change: "+1.2%", icon: MousePointerClick },
+        ];
+    } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
+    }
+
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
@@ -13,12 +55,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {[
-                    { title: "Total de Leads", value: "1,248", change: "+12.5%", icon: Users },
-                    { title: "Leads (Este Mês)", value: "342", change: "+4.1%", icon: TrendingUp },
-                    { title: "Taxa de Conversão", value: "8.2%", change: "+1.2%", icon: MousePointerClick },
-                    { title: "Webhooks Ativos", value: "3", change: "0%", icon: Webhook },
-                ].map((stat, i) => (
+                {stats.map((stat, i) => (
                     <BlurFade key={i} delay={0.1 * i} inView>
                         <MagicCard className="flex flex-col p-6 shadow-sm border-neutral-200 dark:border-neutral-800" gradientColor="#D9D9D955">
                             <div className="flex items-center justify-between">
