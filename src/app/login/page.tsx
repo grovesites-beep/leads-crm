@@ -21,12 +21,24 @@ import { DotPattern } from "@/components/magicui/dot-pattern";
 import { Sparkles } from "lucide-react";
 
 import { LoginSchema } from "@/lib/validations/auth";
-import { signIn } from "@/lib/appwrite/actions";
+import { signIn, getSettings } from "@/lib/appwrite/actions";
+import { useEffect } from "react";
 
 export default function LoginPage() {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
+    const [appName, setAppName] = useState("Grove Leads CRM");
+
+    useEffect(() => {
+        async function loadSettings() {
+            const res = await getSettings();
+            if (res.success && res.settings?.appName) {
+                setAppName(res.settings.appName);
+            }
+        }
+        loadSettings();
+    }, []);
 
     const form = useForm<z.infer<typeof LoginSchema>>({
         resolver: zodResolver(LoginSchema),
@@ -56,7 +68,7 @@ export default function LoginPage() {
                 <BlurFade delay={0.25} inView className="flex flex-col items-center mb-8">
                     <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm text-primary mb-4">
                         <Sparkles className="mr-2 h-4 w-4" />
-                        <span className="font-medium">Grove Leads CRM</span>
+                        <span className="font-medium">{appName}</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-center">
                         Acessar Painel

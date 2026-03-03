@@ -40,7 +40,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { signOut, getLoggedInUser } from "@/lib/appwrite/actions"
+import { signOut, getLoggedInUser, getSettings } from "@/lib/appwrite/actions"
 import { useEffect, useState } from "react"
 
 export function AppSidebar() {
@@ -50,13 +50,19 @@ export function AppSidebar() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const [settings, setSettings] = useState<any>(null);
+
     useEffect(() => {
-        async function fetchUser() {
-            const data = await getLoggedInUser();
-            setUser(data);
+        async function loadData() {
+            const [userData, settingsData] = await Promise.all([
+                getLoggedInUser(),
+                getSettings()
+            ]);
+            setUser(userData);
+            if (settingsData.success) setSettings(settingsData.settings);
             setLoading(false);
         }
-        fetchUser();
+        loadData();
     }, []);
 
     const handleLogout = async () => {
@@ -116,7 +122,7 @@ export function AppSidebar() {
                     <div className="bg-primary text-primary-foreground rounded-lg p-1">
                         <Palette className="h-5 w-5" />
                     </div>
-                    <span>Grove CRM</span>
+                    <span className="truncate">{settings?.appName || "Grove CRM"}</span>
                 </div>
             </SidebarHeader>
             <SidebarContent className="py-2">
