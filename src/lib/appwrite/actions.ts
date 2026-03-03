@@ -95,6 +95,41 @@ export async function getClients() {
     }
 }
 
+// --- SYSTEM SETTINGS ---
+
+export async function updateSettings(data: { appName: string, primaryColor: string }) {
+    try {
+        const { getDatabases } = await createSessionClient();
+        const databases = getDatabases();
+
+        await databases.updateDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
+            'global',
+            data
+        );
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function getSettings() {
+    try {
+        const { getDatabases } = await createSessionClient();
+        const databases = getDatabases();
+
+        const settings = await databases.getDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            process.env.NEXT_PUBLIC_APPWRITE_SYSTEM_COLLECTION_ID!,
+            'global'
+        );
+        return { success: true, settings };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 // --- LEADS ---
 
 export async function getLeads() {
