@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AnimatedGradientText, BlurFade, BorderBeam } from '@/components/magic-ui';
-import { acaoLogin } from '@/lib/actions/autenticacao';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Lock, Mail, Loader2 } from 'lucide-react';
 
@@ -31,14 +30,24 @@ export default function PaginaLogin() {
 
     const aoSubmeterFormulario = (dados: FormularioLogin) => {
         startTransition(async () => {
-            const resultado = await acaoLogin({ email: dados.email, senha: dados.senha });
+            try {
+                // Usa a API Route server-side para evitar CORS (sem necessidade de plataforma Appwrite)
+                const resposta = await fetch('/api/autenticar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: dados.email, senha: dados.senha }),
+                });
 
-            if (resultado.sucesso && resultado.dados) {
-                const { redirecionarPara } = resultado.dados as { redirecionarPara: string };
-                toast.success('Login realizado com sucesso!');
-                router.push(redirecionarPara);
-            } else {
-                toast.error(resultado.erro || 'Erro ao fazer login.');
+                const resultado = await resposta.json();
+
+                if (resultado.sucesso) {
+                    toast.success('Login realizado com sucesso!');
+                    router.push(resultado.redirecionarPara);
+                } else {
+                    toast.error(resultado.erro || 'Erro ao fazer login.');
+                }
+            } catch {
+                toast.error('Erro de conexão. Tente novamente.');
             }
         });
     };
@@ -168,10 +177,10 @@ export default function PaginaLogin() {
                     </div>
                 </BlurFade>
 
-                {/* Footer */}
+                {/* Footer com ano dinâmico */}
                 <BlurFade delay={0.4}>
                     <p className="text-center text-slate-600 text-xs mt-6">
-                        © 2025 LeadsCRM · Todos os direitos reservados
+                        © {new Date().getFullYear()} LeadsCRM · Todos os direitos reservados
                     </p>
                 </BlurFade>
             </div>
