@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { useState } from "react";
 import {
@@ -12,7 +14,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Search } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Search, Check, Copy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -125,13 +127,13 @@ export const columns: ColumnDef<Lead>[] = [
                         <DropdownMenuItem
                             onClick={() => navigator.clipboard.writeText(lead.$id)}
                         >
-                            Copiar ID do Lead
+                            Copiar ID
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setSelectedLead(lead)}>
                             Ver Detalhes
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Excluir Lead</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
@@ -154,7 +156,7 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
         state: {
@@ -164,8 +166,8 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
             rowSelection,
         },
         meta: {
-            setSelectedLead: (lead: Lead) => setSelectedLead(lead)
-        }
+            setSelectedLead: (lead: Lead) => setSelectedLead(lead),
+        },
     });
 
     return (
@@ -194,7 +196,7 @@ export function LeadsDataTable({ data }: { data: Lead[] }) {
                             .filter((column) => column.getCanHide())
                             .map((column) => {
                                 return (
-_                                    <DropdownMenuCheckboxItem
+                                    <DropdownMenuCheckboxItem
                                         key={column.id}
                                         className="capitalize"
                                         checked={column.getIsVisible()}
@@ -327,6 +329,6 @@ _                                    <DropdownMenuCheckboxItem
                     </div>
                 </SheetContent>
             </Sheet>
-        </div >
+        </div>
     );
 }
