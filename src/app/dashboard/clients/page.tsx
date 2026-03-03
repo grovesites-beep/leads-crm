@@ -44,7 +44,7 @@ export default function ClientsPage() {
         setLoading(true);
         const res = await getClients();
         if (res.success) {
-            setClients(res.clients);
+            setClients(res.clients || []);
         }
         setLoading(false);
     };
