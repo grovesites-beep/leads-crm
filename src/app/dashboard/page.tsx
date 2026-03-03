@@ -14,19 +14,26 @@ export default async function DashboardPage() {
         { title: "Conversão (Simulada)", value: "8.2%", change: "+1.2%", icon: MousePointerClick },
     ];
 
+    let user;
     try {
-        const user = await getLoggedInUser();
-        if (!user) {
-            redirect("/login");
-            return;
-        }
+        user = await getLoggedInUser();
+    } catch (e) {
+        console.error("Erro ao obter usuário:", e);
+    }
 
+    if (!user) {
+        redirect("/login");
+        return;
+    }
+
+    try {
         const { getDatabases } = await createSessionClient();
         const databases = getDatabases();
 
         const isAdmin = user.labels?.includes('admin') ||
-            user.email === 'admin@grovehub.com.br' ||
-            user.email === 'nei@grovehub.com.br';
+            user.email?.toLowerCase() === 'admin@grovehub.com.br' ||
+            user.email?.toLowerCase() === 'nei@grovehub.com.br';
+
 
         const baseQueries: string[] = [];
         if (!isAdmin) {
