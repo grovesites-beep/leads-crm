@@ -31,7 +31,7 @@ export function SidebarCliente({ nomeCliente, corPrimaria = '#7c3aed' }: Sidebar
     const caminho = usePathname();
 
     return (
-        <aside className="flex flex-col w-64 min-h-screen bg-[#080810] border-r border-white/10">
+        <aside className="flex flex-col w-64 min-h-screen bg-white dark:bg-[#080810] border-r border-slate-200 dark:border-white/10 transition-colors duration-300">
             {/* Logo */}
             <div className="p-6">
                 <Link href="/dashboard" className="flex items-center gap-3">
@@ -42,7 +42,7 @@ export function SidebarCliente({ nomeCliente, corPrimaria = '#7c3aed' }: Sidebar
                         <Zap className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <span className="text-white font-bold text-base">LeadsCRM</span>
+                        <span className="text-slate-900 dark:text-white font-bold text-base">LeadsCRM</span>
                         {nomeCliente && (
                             <span className="text-slate-500 text-xs font-medium block -mt-0.5 truncate max-w-[120px]">
                                 {nomeCliente}
@@ -52,11 +52,11 @@ export function SidebarCliente({ nomeCliente, corPrimaria = '#7c3aed' }: Sidebar
                 </Link>
             </div>
 
-            <Separator className="bg-white/5" />
+            <Separator className="bg-slate-200 dark:bg-white/5" />
 
             {/* Navegação */}
             <nav className="flex-1 p-4 space-y-1">
-                <p className="text-slate-600 text-xs font-medium uppercase tracking-wider px-3 mb-3">
+                <p className="text-slate-400 dark:text-slate-600 text-xs font-medium uppercase tracking-wider px-3 mb-3">
                     Menu
                 </p>
                 {itensNavegacao.map((item) => {
@@ -69,26 +69,31 @@ export function SidebarCliente({ nomeCliente, corPrimaria = '#7c3aed' }: Sidebar
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group',
                                 ativo
-                                    ? 'bg-violet-600/20 text-violet-400 border border-violet-500/20'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    ? 'bg-violet-100 dark:bg-violet-600/20 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
                             )}
                         >
-                            <Icone className={cn('w-4 h-4 flex-shrink-0', ativo ? 'text-violet-400' : 'text-slate-500 group-hover:text-white')} />
+                            <Icone className={cn(
+                                'w-4 h-4 flex-shrink-0',
+                                ativo
+                                    ? 'text-violet-600 dark:text-violet-400'
+                                    : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-white'
+                            )} />
                             <span>{item.rotulo}</span>
-                            {ativo && <ChevronRight className="w-3 h-3 ml-auto text-violet-400" />}
+                            {ativo && <ChevronRight className="w-3 h-3 ml-auto text-violet-600 dark:text-violet-400" />}
                         </Link>
                     );
                 })}
             </nav>
 
-            <Separator className="bg-white/5" />
+            <Separator className="bg-slate-200 dark:bg-white/5" />
 
             <div className="p-4">
                 <form action={acaoLogout}>
                     <Button
                         type="submit"
                         variant="ghost"
-                        className="w-full justify-start gap-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 font-medium"
+                        className="w-full justify-start gap-3 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium"
                     >
                         <LogOut className="w-4 h-4" />
                         Sair
