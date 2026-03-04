@@ -33,14 +33,14 @@ export default async function PaginaDetalhesLead({ params }: PaginaDetalhesLeadP
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link href="/dashboard">
-                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white border border-white/10 rounded-lg">
+                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-700 dark:hover:text-white border border-slate-200 dark:border-white/10 rounded-lg">
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
                 </Link>
                 <div className="flex items-center gap-3">
                     <div>
-                        <h1 className="text-white text-xl font-bold">{lead.nome}</h1>
-                        <p className="text-slate-400 text-sm">Detalhes do lead</p>
+                        <h1 className="text-slate-900 dark:text-white text-xl font-bold">{lead.nome}</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">Detalhes do lead</p>
                     </div>
                     <Badge className={`${COR_STATUS_LEAD[lead.status]} border rounded-full px-3`}>
                         {LABEL_STATUS_LEAD[lead.status]}
@@ -50,19 +50,19 @@ export default async function PaginaDetalhesLead({ params }: PaginaDetalhesLeadP
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Informações do Lead */}
-                <Card className="bg-white/5 border-white/10 lg:col-span-2">
+                <Card className="bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 lg:col-span-2 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-white text-base">Informações de Contato</CardTitle>
+                        <CardTitle className="text-slate-900 dark:text-white text-base">Informações de Contato</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {lead.email && (
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
-                                    <Mail className="w-4 h-4 text-blue-400" />
+                                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
+                                    <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                 </div>
                                 <div>
                                     <p className="text-slate-500 text-xs">E-mail</p>
-                                    <a href={`mailto:${lead.email}`} className="text-white hover:text-violet-400 transition-colors">
+                                    <a href={`mailto:${lead.email}`} className="text-slate-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
                                         {lead.email}
                                     </a>
                                 </div>
@@ -70,12 +70,12 @@ export default async function PaginaDetalhesLead({ params }: PaginaDetalhesLeadP
                         )}
                         {lead.telefone && (
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center">
-                                    <Phone className="w-4 h-4 text-green-400" />
+                                <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-500/15 flex items-center justify-center">
+                                    <Phone className="w-4 h-4 text-green-600 dark:text-green-400" />
                                 </div>
                                 <div>
                                     <p className="text-slate-500 text-xs">Telefone</p>
-                                    <a href={`tel:${lead.telefone}`} className="text-white hover:text-violet-400 transition-colors">
+                                    <a href={`tel:${lead.telefone}`} className="text-slate-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
                                         {lead.telefone}
                                     </a>
                                 </div>
@@ -83,22 +83,22 @@ export default async function PaginaDetalhesLead({ params }: PaginaDetalhesLeadP
                         )}
                         {lead.origem && (
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center">
-                                    <Globe className="w-4 h-4 text-orange-400" />
+                                <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-500/15 flex items-center justify-center">
+                                    <Globe className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                                 </div>
                                 <div>
                                     <p className="text-slate-500 text-xs">Origem</p>
-                                    <p className="text-white capitalize">{lead.origem}</p>
+                                    <p className="text-slate-900 dark:text-white capitalize">{lead.origem}</p>
                                 </div>
                             </div>
                         )}
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
-                                <Calendar className="w-4 h-4 text-violet-400" />
+                            <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
+                                <Calendar className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                             </div>
                             <div>
                                 <p className="text-slate-500 text-xs">Recebido em</p>
-                                <p className="text-white">
+                                <p className="text-slate-900 dark:text-white">
                                     {format(new Date(lead.$createdAt), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
                                 </p>
                             </div>
@@ -106,16 +106,16 @@ export default async function PaginaDetalhesLead({ params }: PaginaDetalhesLeadP
 
                         {/* Metadados extras do n8n */}
                         {Object.keys(metadados).length > 0 && (
-                            <div className="pt-4 border-t border-white/10">
+                            <div className="pt-4 border-t border-slate-100 dark:border-white/10">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <FileText className="w-4 h-4 text-slate-500" />
-                                    <p className="text-slate-400 text-sm font-medium">Dados extras do webhook</p>
+                                    <FileText className="w-4 h-4 text-slate-400" />
+                                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Dados extras do webhook</p>
                                 </div>
                                 <div className="space-y-2">
                                     {Object.entries(metadados).map(([chave, valor]) => (
                                         <div key={chave} className="flex items-start gap-2 text-sm">
                                             <span className="text-slate-500 capitalize min-w-24">{chave}:</span>
-                                            <span className="text-slate-300">{String(valor)}</span>
+                                            <span className="text-slate-700 dark:text-slate-300">{String(valor)}</span>
                                         </div>
                                     ))}
                                 </div>

@@ -10,8 +10,8 @@ export default async function PaginaAdminLeads() {
     return (
         <div className="p-8 space-y-8">
             <div>
-                <h1 className="text-white text-2xl font-bold">Todos os Leads</h1>
-                <p className="text-slate-400 text-sm mt-1">Visão global de todos os leads capturados no sistema</p>
+                <h1 className="text-slate-900 dark:text-white text-2xl font-bold">Todos os Leads</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Visão global de todos os leads capturados no sistema</p>
             </div>
 
             <div>

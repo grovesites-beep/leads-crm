@@ -48,28 +48,28 @@ export function FormularioEditarLead({ lead }: FormularioEditarLeadProps) {
     };
 
     return (
-        <Card className="bg-white/5 border-white/10">
+        <Card className="bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 shadow-sm">
             <CardHeader>
-                <CardTitle className="text-white text-base flex items-center gap-2">
-                    <ClipboardEdit className="w-4 h-4 text-violet-400" />
+                <CardTitle className="text-slate-900 dark:text-white text-base flex items-center gap-2">
+                    <ClipboardEdit className="w-4 h-4 text-violet-500" />
                     Editar Lead
                 </CardTitle>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(aoSubmeter)} className="space-y-4">
                     <div className="space-y-2">
-                        <Label className="text-slate-300 text-sm">Status</Label>
+                        <Label className="text-slate-700 dark:text-slate-300 text-sm">Status</Label>
                         <Controller
                             control={control}
                             name="status"
                             render={({ field }) => (
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-lg">
+                                    <SelectTrigger className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-lg">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-[#0f0f1a] border-white/10">
+                                    <SelectContent className="bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10">
                                         {(Object.entries(LABEL_STATUS_LEAD) as [StatusLead, string][]).map(([valor, rotulo]) => (
-                                            <SelectItem key={valor} value={valor} className="text-slate-300 hover:text-white focus:text-white focus:bg-white/10">
+                                            <SelectItem key={valor} value={valor} className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus:text-slate-900 dark:focus:text-white">
                                                 {rotulo}
                                             </SelectItem>
                                         ))}
@@ -80,12 +80,12 @@ export function FormularioEditarLead({ lead }: FormularioEditarLeadProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-slate-300 text-sm">Anotações</Label>
+                        <Label className="text-slate-700 dark:text-slate-300 text-sm">Anotações</Label>
                         <Textarea
                             {...register('notas')}
                             placeholder="Adicione notas sobre este lead..."
                             rows={5}
-                            className="bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-lg resize-none"
+                            className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 rounded-lg resize-none"
                         />
                     </div>
 

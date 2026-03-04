@@ -99,12 +99,12 @@ export function TabelaClientes({ clientesIniciais }: TabelaClientesProps) {
             {/* Barra de ações */}
             <div className="flex items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                         placeholder="Buscar clientes..."
                         value={busca}
                         onChange={(e) => setBusca(e.target.value)}
-                        className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-lg"
+                        className="pl-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 rounded-lg"
                     />
                 </div>
 
@@ -115,51 +115,51 @@ export function TabelaClientes({ clientesIniciais }: TabelaClientesProps) {
                             Novo Cliente
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[#0f0f1a] border-white/10 text-white max-w-md">
+                    <DialogContent className="bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10 max-w-md">
                         <DialogHeader>
-                            <DialogTitle className="text-white flex items-center gap-2">
-                                <UserPlus className="w-5 h-5 text-violet-400" />
+                            <DialogTitle className="text-slate-900 dark:text-white flex items-center gap-2">
+                                <UserPlus className="w-5 h-5 text-violet-500" />
                                 Criar Novo Cliente
                             </DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit(aoSubmeterCriarCliente)} className="space-y-4 mt-2">
                             <div className="space-y-2">
-                                <Label className="text-slate-300">Nome</Label>
+                                <Label className="text-slate-700 dark:text-slate-300">Nome</Label>
                                 <Input
                                     {...register('nome')}
                                     placeholder="Nome do cliente"
-                                    className="bg-white/5 border-white/10 text-white placeholder:text-slate-600"
+                                    className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400"
                                 />
-                                {errors.nome && <p className="text-red-400 text-xs">{errors.nome.message}</p>}
+                                {errors.nome && <p className="text-red-500 dark:text-red-400 text-xs">{errors.nome.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-300">E-mail</Label>
+                                <Label className="text-slate-700 dark:text-slate-300">E-mail</Label>
                                 <Input
                                     {...register('email')}
                                     type="email"
                                     placeholder="cliente@empresa.com"
-                                    className="bg-white/5 border-white/10 text-white placeholder:text-slate-600"
+                                    className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400"
                                 />
-                                {errors.email && <p className="text-red-400 text-xs">{errors.email.message}</p>}
+                                {errors.email && <p className="text-red-500 dark:text-red-400 text-xs">{errors.email.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-300">
-                                    Senha <span className="text-slate-500 text-xs">(deixe em branco para gerar automaticamente)</span>
+                                <Label className="text-slate-700 dark:text-slate-300">
+                                    Senha <span className="text-slate-400 text-xs">(deixe em branco para gerar automaticamente)</span>
                                 </Label>
                                 <Input
                                     {...register('senha')}
                                     type="password"
                                     placeholder="••••••••"
-                                    className="bg-white/5 border-white/10 text-white placeholder:text-slate-600"
+                                    className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400"
                                 />
-                                {errors.senha && <p className="text-red-400 text-xs">{errors.senha.message}</p>}
+                                {errors.senha && <p className="text-red-500 dark:text-red-400 text-xs">{errors.senha.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-300">Plano</Label>
+                                <Label className="text-slate-700 dark:text-slate-300">Plano</Label>
                                 <Input
                                     {...register('plano')}
                                     placeholder="basico, profissional, premium"
-                                    className="bg-white/5 border-white/10 text-white placeholder:text-slate-600"
+                                    className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400"
                                 />
                             </div>
                             <Button
@@ -175,44 +175,44 @@ export function TabelaClientes({ clientesIniciais }: TabelaClientesProps) {
             </div>
 
             {/* Tabela */}
-            <div className="rounded-xl border border-white/10 overflow-hidden">
+            <div className="rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden bg-white dark:bg-transparent">
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-white/10 hover:bg-transparent">
-                            <TableHead className="text-slate-400">Cliente</TableHead>
-                            <TableHead className="text-slate-400">Plano</TableHead>
-                            <TableHead className="text-slate-400">Status</TableHead>
-                            <TableHead className="text-slate-400">Token Webhook</TableHead>
-                            <TableHead className="text-slate-400">Criado em</TableHead>
-                            <TableHead className="text-slate-400 w-12"></TableHead>
+                        <TableRow className="border-slate-200 dark:border-white/10 hover:bg-transparent bg-slate-50 dark:bg-white/5">
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Cliente</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Plano</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Status</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Token Webhook</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Criado em</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 w-12"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {clientesFiltrados.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center text-slate-500 py-12">
+                                <TableCell colSpan={6} className="text-center text-slate-400 py-12">
                                     {busca ? 'Nenhum cliente encontrado com essa busca.' : 'Nenhum cliente cadastrado.'}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             clientesFiltrados.map((cliente) => (
-                                <TableRow key={cliente.$id} className="border-white/5 hover:bg-white/3">
+                                <TableRow key={cliente.$id} className="border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/3">
                                     <TableCell>
                                         <div>
-                                            <p className="text-white font-medium">{cliente.nome}</p>
+                                            <p className="text-slate-900 dark:text-white font-medium">{cliente.nome}</p>
                                             <p className="text-slate-500 text-xs">{cliente.email}</p>
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="border-white/20 text-slate-300 capitalize">
+                                        <Badge variant="outline" className="border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 capitalize">
                                             {cliente.plano || 'básico'}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge
                                             className={cliente.ativo
-                                                ? 'bg-green-500/15 text-green-400 border border-green-500/20'
-                                                : 'bg-red-500/15 text-red-400 border border-red-500/20'
+                                                ? 'bg-emerald-100 dark:bg-green-500/15 text-emerald-700 dark:text-green-400 border border-emerald-200 dark:border-green-500/20'
+                                                : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20'
                                             }
                                         >
                                             {cliente.ativo ? 'Ativo' : 'Inativo'}
@@ -221,7 +221,7 @@ export function TabelaClientes({ clientesIniciais }: TabelaClientesProps) {
                                     <TableCell>
                                         <button
                                             onClick={() => copiarToken(cliente.webhookToken)}
-                                            className="flex items-center gap-1.5 text-slate-500 hover:text-violet-400 transition-colors text-xs font-mono"
+                                            className="flex items-center gap-1.5 text-slate-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors text-xs font-mono"
                                             title="Clique para copiar"
                                         >
                                             <span>{cliente.webhookToken?.substring(0, 12)}...</span>
@@ -234,21 +234,21 @@ export function TabelaClientes({ clientesIniciais }: TabelaClientesProps) {
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-500 hover:text-white">
+                                                <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-400 hover:text-slate-700 dark:hover:text-white">
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent className="bg-[#0f0f1a] border-white/10" align="end">
+                                            <DropdownMenuContent className="bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10" align="end">
                                                 <DropdownMenuItem
                                                     onClick={() => router.push(`/admin/clientes/${cliente.$id}`)}
-                                                    className="text-slate-300 hover:text-white cursor-pointer"
+                                                    className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                                                 >
                                                     <Eye className="w-4 h-4 mr-2" />
                                                     Ver detalhes
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => aoExcluirCliente(cliente.$id, cliente.nome)}
-                                                    className="text-red-400 hover:text-red-300 cursor-pointer"
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 cursor-pointer"
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" />
                                                     Excluir

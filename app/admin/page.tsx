@@ -2,7 +2,6 @@ import { listarClientes } from '@/lib/actions/clientes';
 import { listarLeads } from '@/lib/actions/leads';
 import { Users, BarChart3, TrendingUp, UserCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TabelaClientes } from '@/components/admin/TabelaClientes';
 
 export const metadata = { title: 'Admin – LeadsCRM' };
 
@@ -55,8 +54,8 @@ export default async function PaginaAdmin() {
         <div className="p-8 space-y-8">
             {/* Header */}
             <div>
-                <h1 className="text-white text-2xl font-bold">Painel Administrativo</h1>
-                <p className="text-slate-400 text-sm mt-1">Gerencie todos os seus clientes e leads</p>
+                <h1 className="text-slate-900 dark:text-white text-2xl font-bold">Painel Administrativo</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Gerencie todos os seus clientes e leads</p>
             </div>
 
             {/* Cards de métricas */}
@@ -64,18 +63,18 @@ export default async function PaginaAdmin() {
                 {cartoes.map((cartao) => {
                     const Icone = cartao.icone;
                     return (
-                        <Card key={cartao.titulo} className="bg-white/5 border-white/10 hover:bg-white/8 transition-colors">
+                        <Card key={cartao.titulo} className="bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:shadow-md dark:hover:bg-white/8 transition-all">
                             <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-slate-400 text-sm font-medium">{cartao.titulo}</CardTitle>
+                                    <CardTitle className="text-slate-500 dark:text-slate-400 text-sm font-medium">{cartao.titulo}</CardTitle>
                                     <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${cartao.cor} flex items-center justify-center`}>
                                         <Icone className="w-4 h-4 text-white" />
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-white text-3xl font-bold">{cartao.valor}</p>
-                                <p className="text-slate-500 text-xs mt-1">{cartao.descricao}</p>
+                                <p className="text-slate-900 dark:text-white text-3xl font-bold">{cartao.valor}</p>
+                                <p className="text-slate-500 dark:text-slate-500 text-xs mt-1">{cartao.descricao}</p>
                             </CardContent>
                         </Card>
                     );
@@ -83,30 +82,30 @@ export default async function PaginaAdmin() {
             </div>
 
             {/* Resumo de Clientes Rápidos */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h2 className="text-white text-lg font-semibold">Clientes Recentes</h2>
+                        <h2 className="text-slate-900 dark:text-white text-lg font-semibold">Clientes Recentes</h2>
                         <p className="text-slate-500 text-sm">Os últimos clientes cadastrados no sistema</p>
                     </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {clientes.slice(0, 5).map((cliente) => (
-                        <div key={cliente.$id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/8 transition-colors">
+                        <div key={cliente.$id} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
                             <div className="flex items-center gap-4">
                                 <div
-                                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm"
                                     style={{ background: `linear-gradient(135deg, ${cliente.brandingCorPrimaria || '#7c3aed'}, ${cliente.brandingCorPrimaria || '#7c3aed'}99)` }}
                                 >
                                     {cliente.nome.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <p className="text-white font-medium">{cliente.nome}</p>
+                                    <p className="text-slate-900 dark:text-white font-medium">{cliente.nome}</p>
                                     <p className="text-slate-500 text-xs">{cliente.email}</p>
                                 </div>
                             </div>
-                            <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${cliente.ativo ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                            <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${cliente.ativo ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-500' : 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-500'}`}>
                                 {cliente.ativo ? 'Ativo' : 'Inativo'}
                             </div>
                         </div>

@@ -10,8 +10,8 @@ export default async function PaginaAdminClientes() {
     return (
         <div className="p-8 space-y-8">
             <div>
-                <h1 className="text-white text-2xl font-bold">Gestão de Clientes</h1>
-                <p className="text-slate-400 text-sm mt-1">Crie, edite e gerencie o acesso dos seus clientes</p>
+                <h1 className="text-slate-900 dark:text-white text-2xl font-bold">Gestão de Clientes</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Crie, edite e gerencie o acesso dos seus clientes</p>
             </div>
 
             <div>

@@ -70,23 +70,23 @@ export function TabelaLeads({ leadsIniciais }: TabelaLeadsProps) {
             {/* Barra de filtros */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                         placeholder="Buscar por nome, e-mail ou telefone..."
                         value={busca}
                         onChange={(e) => setBusca(e.target.value)}
-                        className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-lg"
+                        className="pl-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 rounded-lg"
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-slate-500" />
+                    <Filter className="w-4 h-4 text-slate-400" />
                     <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                        <SelectTrigger className="w-48 bg-white/5 border-white/10 text-white rounded-lg">
+                        <SelectTrigger className="w-48 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white rounded-lg">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#0f0f1a] border-white/10">
+                        <SelectContent className="bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10">
                             {statusOpcoes.map(op => (
-                                <SelectItem key={op.valor} value={op.valor} className="text-slate-300 hover:text-white focus:text-white focus:bg-white/10">
+                                <SelectItem key={op.valor} value={op.valor} className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus:text-slate-900 dark:focus:text-white">
                                     {op.rotulo}
                                 </SelectItem>
                             ))}
@@ -97,7 +97,7 @@ export function TabelaLeads({ leadsIniciais }: TabelaLeadsProps) {
                         size="icon"
                         onClick={() => router.refresh()}
                         disabled={isPending}
-                        className="text-slate-500 hover:text-white border border-white/10 rounded-lg"
+                        className="text-slate-400 hover:text-slate-700 dark:hover:text-white border border-slate-200 dark:border-white/10 rounded-lg"
                         title="Atualizar leads"
                     >
                         <RefreshCw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
@@ -111,45 +111,45 @@ export function TabelaLeads({ leadsIniciais }: TabelaLeadsProps) {
             </p>
 
             {/* Tabela */}
-            <div className="rounded-xl border border-white/10 overflow-hidden">
+            <div className="rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden bg-white dark:bg-transparent">
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-white/10 hover:bg-transparent">
-                            <TableHead className="text-slate-400">Lead</TableHead>
-                            <TableHead className="text-slate-400">Contato</TableHead>
-                            <TableHead className="text-slate-400">Origem</TableHead>
-                            <TableHead className="text-slate-400">Status</TableHead>
-                            <TableHead className="text-slate-400">Recebido em</TableHead>
-                            <TableHead className="text-slate-400 w-12"></TableHead>
+                        <TableRow className="border-slate-200 dark:border-white/10 hover:bg-transparent bg-slate-50 dark:bg-white/5">
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Lead</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Contato</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Origem</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Status</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Recebido em</TableHead>
+                            <TableHead className="text-slate-600 dark:text-slate-400 w-12"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {leadsFiltrados.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center text-slate-500 py-16">
+                                <TableCell colSpan={6} className="text-center text-slate-400 py-16">
                                     <div className="flex flex-col items-center gap-2">
-                                        <Search className="w-8 h-8 text-slate-700" />
+                                        <Search className="w-8 h-8 text-slate-300 dark:text-slate-700" />
                                         <p>{busca || filtroStatus !== 'todos' ? 'Nenhum lead encontrado com os filtros aplicados.' : 'Nenhum lead recebido ainda.'}</p>
-                                        <p className="text-xs text-slate-600">Os leads chegam automaticamente via webhook do n8n</p>
+                                        <p className="text-xs text-slate-400 dark:text-slate-600">Os leads chegam automaticamente via webhook do n8n</p>
                                     </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             leadsFiltrados.map((lead) => (
-                                <TableRow key={lead.$id} className="border-white/5 hover:bg-white/3 cursor-pointer">
+                                <TableRow key={lead.$id} className="border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/3 cursor-pointer">
                                     <TableCell onClick={() => router.push(`/dashboard/leads/${lead.$id}`)}>
-                                        <p className="text-white font-medium">{lead.nome}</p>
+                                        <p className="text-slate-900 dark:text-white font-medium">{lead.nome}</p>
                                     </TableCell>
                                     <TableCell onClick={() => router.push(`/dashboard/leads/${lead.$id}`)}>
                                         <div className="space-y-0.5">
                                             {lead.email && (
-                                                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                                                <div className="flex items-center gap-1.5 text-slate-500 text-xs">
                                                     <Mail className="w-3 h-3" />
                                                     <span>{lead.email}</span>
                                                 </div>
                                             )}
                                             {lead.telefone && (
-                                                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                                                <div className="flex items-center gap-1.5 text-slate-500 text-xs">
                                                     <Phone className="w-3 h-3" />
                                                     <span>{lead.telefone}</span>
                                                 </div>
@@ -157,7 +157,7 @@ export function TabelaLeads({ leadsIniciais }: TabelaLeadsProps) {
                                         </div>
                                     </TableCell>
                                     <TableCell onClick={() => router.push(`/dashboard/leads/${lead.$id}`)}>
-                                        <span className="text-slate-400 text-sm capitalize">{lead.origem || '—'}</span>
+                                        <span className="text-slate-500 text-sm capitalize">{lead.origem || '—'}</span>
                                     </TableCell>
                                     <TableCell>
                                         <Select
@@ -167,9 +167,9 @@ export function TabelaLeads({ leadsIniciais }: TabelaLeadsProps) {
                                             <SelectTrigger className={`w-32 h-7 text-xs border rounded-full px-2 ${COR_STATUS_LEAD[lead.status]} border-current`}>
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-[#0f0f1a] border-white/10">
+                                            <SelectContent className="bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10">
                                                 {(Object.entries(LABEL_STATUS_LEAD) as [StatusLead, string][]).map(([valor, rotulo]) => (
-                                                    <SelectItem key={valor} value={valor} className="text-slate-300 hover:text-white focus:text-white focus:bg-white/10 text-xs">
+                                                    <SelectItem key={valor} value={valor} className="text-slate-700 dark:text-slate-300 text-xs">
                                                         {rotulo}
                                                     </SelectItem>
                                                 ))}
@@ -182,14 +182,14 @@ export function TabelaLeads({ leadsIniciais }: TabelaLeadsProps) {
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-500 hover:text-white">
+                                                <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-400 hover:text-slate-700 dark:hover:text-white">
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent className="bg-[#0f0f1a] border-white/10" align="end">
+                                            <DropdownMenuContent className="bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10" align="end">
                                                 <DropdownMenuItem
                                                     onClick={() => router.push(`/dashboard/leads/${lead.$id}`)}
-                                                    className="text-slate-300 hover:text-white cursor-pointer"
+                                                    className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                                                 >
                                                     <Eye className="w-4 h-4 mr-2" />
                                                     Ver detalhes

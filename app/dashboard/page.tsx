@@ -31,10 +31,10 @@ export default async function PaginaDashboard() {
         <div className="p-8 space-y-8">
             {/* Header */}
             <div>
-                <h1 className="text-white text-2xl font-bold">
+                <h1 className="text-slate-900 dark:text-white text-2xl font-bold">
                     Olá, {cliente?.nome || 'Cliente'} 👋
                 </h1>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                     Aqui estão os seus leads em tempo real
                 </p>
             </div>
@@ -44,17 +44,17 @@ export default async function PaginaDashboard() {
                 {cartoes.map((cartao) => {
                     const Icone = cartao.icone;
                     return (
-                        <Card key={cartao.titulo} className="bg-white/5 border-white/10 hover:bg-white/8 transition-colors">
+                        <Card key={cartao.titulo} className="bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:shadow-md dark:hover:bg-white/8 transition-all">
                             <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-slate-400 text-sm font-medium">{cartao.titulo}</CardTitle>
+                                    <CardTitle className="text-slate-500 dark:text-slate-400 text-sm font-medium">{cartao.titulo}</CardTitle>
                                     <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${cartao.cor} flex items-center justify-center`}>
                                         <Icone className="w-4 h-4 text-white" />
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-white text-3xl font-bold">{cartao.valor}</p>
+                                <p className="text-slate-900 dark:text-white text-3xl font-bold">{cartao.valor}</p>
                             </CardContent>
                         </Card>
                     );
